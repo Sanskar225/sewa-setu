@@ -1,0 +1,207 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// ENUMS
+//
+enum Role {
+  USER
+  PROVIDER
+  ADMIN
+}
+
+enum BookingStatus {
+  PENDING
+  ACCEPTED
+  COMPLETED
+  CANCELLED
+}
+
+enum TransactionType {
+  CREDIT
+  DEBIT
+}
+
+enum TransactionSource {
+  TOPUP
+  REFUND
+  BOOKING
+}
+
+enum NotificationType {
+  BOOKING
+  WALLET
+  ADMIN
+}
+
+enum FileType {
+  PROFILE
+  ID_PROOF
+  CERTIFICATE
+  OTHER
+}
+
+//
+// MODELS
+//
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  phone     String   @unique
+  password  String?
+  role      Role     @default(USER)
+  location  String?
+  createdAt DateTime @default(now())
+
+  // Relations
+  bookings           Booking[]           @relation("UserBookings")
+  jobs               Booking[]           @relation("ProviderBookings")
+  wallet             Wallet?
+  providerProfile    ProviderProfile?
+  reviewsAsUser      Review[]            @relation("UserReviews")
+  reviewsAsProvider  Review[]            @relation("ProviderReviews")
+  notifications      Notification[]
+  walletTransactions WalletTransaction[]
+  messagesSent       Message[]           @relation("SentMessages")
+  messagesReceived   Message[]           @relation("ReceivedMessages")
+  files              File[]
+  availabilitySlots  AvailabilitySlot[]
+}
+
+model ProviderProfile {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  user             User     @relation(fields: [userId], references: [id])
+  categories       String[]
+  skills           String[]
+  rate             Int
+  availability     Boolean  @default(true)
+  description      String?
+  address          String?
+  latitude         Float?
+  longitude        Float?
+  verified         Boolean  @default(false)
+  onboardingStatus String? // e.g. pending, verified, rejected
+}
+
+model Booking {
+  id         String        @id @default(uuid())
+  userId     String
+  providerId String
+  category   String
+  dateTime   DateTime
+  location   String
+  status     BookingStatus @default(PENDING)
+  price      Int
+  notes      String?
+  createdAt  DateTime      @default(now())
+
+  user     User @relation(name: "UserBookings", fields: [userId], references: [id])
+  provider User @relation(name: "ProviderBookings", fields: [providerId], references: [id])
+}
+
+model Wallet {
+  id           String              @id @default(uuid())
+  userId       String              @unique
+  user         User                @relation(fields: [userId], references: [id])
+  balance      Int                 @default(0)
+  updatedAt    DateTime            @updatedAt
+  transactions WalletTransaction[]
+}
+
+model WalletTransaction {
+  id        String            @id @default(uuid())
+  userId    String
+  walletId  String
+  user      User              @relation(fields: [userId], references: [id])
+  wallet    Wallet            @relation(fields: [walletId], references: [id])
+  amount    Int
+  type      TransactionType
+  source    TransactionSource
+  createdAt DateTime          @default(now())
+}
+
+model ServiceCategory {
+  id        String   @id @default(uuid())
+  name      String   @unique
+  image     String?
+  createdAt DateTime @default(now())
+}
+
+model Review {
+  id         String   @id @default(uuid())
+  userId     String
+  providerId String
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+
+  user     User @relation(name: "UserReviews", fields: [userId], references: [id])
+  provider User @relation(name: "ProviderReviews", fields: [providerId], references: [id])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id])
+  message   String
+  type      NotificationType
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+}
+
+model OTP {
+  id        String   @id @default(uuid())
+  email     String
+  code      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
+
+model File {
+  id        String   @id @default(uuid())
+  userId    String
+  url       String
+  type      FileType
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AvailabilitySlot {
+  id         String   @id @default(uuid())
+  providerId String
+  startTime  DateTime
+  endTime    DateTime
+  isBooked   Boolean  @default(false)
+  provider   User     @relation(fields: [providerId], references: [id])
+}
+
+model Message {
+  id         String   @id @default(uuid())
+  senderId   String
+  receiverId String
+  content    String
+  timestamp  DateTime @default(now())
+  read       Boolean  @default(false)
+
+  sender   User @relation("SentMessages", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedMessages", fields: [receiverId], references: [id])
+}
+
+model Coupon {
+  id         String   @id @default(uuid())
+  code       String   @unique
+  discount   Int
+  maxAmount  Int
+  expiryDate DateTime
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+}
