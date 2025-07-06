@@ -86,10 +86,11 @@ model ProviderProfile {
   availability     Boolean  @default(true)
   description      String?
   address          String?
-  latitude         Float?
-  longitude        Float?
+  latitude         Float
+  longitude        Float
   verified         Boolean  @default(false)
   onboardingStatus String? // e.g. pending, verified, rejected
+  @@index([latitude, longitude])
 }
 
 model Booking {
