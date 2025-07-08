@@ -1,0 +1,14 @@
+@import "tailwindcss"; /* Keep Tailwind if used */
+
+/* Add Google Fonts import for 'Inter' */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* Basic reset for consistent styling */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
