@@ -12,16 +12,69 @@ export function BookingsList() {
     fetchBookings();
   }, []);
 
+  // const fetchBookings = async () => {
+  //   try {
+  //     const response = await apiService.getMyBookings();
+  //     setBookings(response.bookings);
+  //   } catch (error) {
+  //     console.error('Error fetching bookings:', error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const fetchBookings = async () => {
-    try {
-      const response = await apiService.getMyBookings();
+  try {
+    const response = await apiService.getMyBookings();
+
+    if (response?.bookings?.length) {
       setBookings(response.bookings);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    } finally {
-      setLoading(false);
+    } else {
+      throw new Error('Empty response');
     }
-  };
+  } catch (error) {
+    console.warn('Using dummy bookings due to error or empty response:', error);
+
+    // ✅ Dummy Bookings Fallback
+    setBookings([
+      {
+        id: 'b1',
+        category: 'AC Repair',
+        dateTime: new Date().toISOString(),
+        location: 'Hazratganj, Lucknow',
+        notes: 'Please come after 5 PM.',
+        price: 600,
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+        provider: { name: 'Ankit Yadav' },
+      },
+      {
+        id: 'b2',
+        category: 'Salon Services',
+        dateTime: new Date().toISOString(),
+        location: 'Alambagh, Lucknow',
+        notes: '',
+        price: 800,
+        status: 'COMPLETED',
+        createdAt: new Date().toISOString(),
+        provider: { name: 'Neha Singh' },
+      },
+      {
+        id: 'b3',
+        category: 'Home Cleaning',
+        dateTime: new Date().toISOString(),
+        location: 'Indira Nagar, Lucknow',
+        notes: 'Bring your own equipment.',
+        price: 500,
+        status: 'CANCELLED',
+        createdAt: new Date().toISOString(),
+        provider: { name: 'Ravi Verma' },
+      },
+    ]);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const handleStatusUpdate = async (bookingId: string, status: string) => {
     try {

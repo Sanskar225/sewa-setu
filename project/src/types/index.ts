@@ -17,10 +17,11 @@ export interface User {
   updatedAt?: string;
 }
 
-// Provider Profile
+// Provider Profile (Enhanced & Merged)
 export interface ProviderProfile {
   id: string;
   userId: string;
+  user: User;
   categories: string[];
   skills: string[];
   rate: number;
@@ -32,7 +33,6 @@ export interface ProviderProfile {
   onboardingStatus?: string;
   createdAt: string;
   updatedAt?: string;
-  user?: User;
 }
 
 // Booking

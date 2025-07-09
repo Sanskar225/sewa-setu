@@ -7,20 +7,70 @@ export function UserDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchBookings = async () => {
-      try {
-        const response = await apiService.getMyBookings();
-        setBookings(response.bookings || []);
-      } catch (error) {
-        console.error('Error fetching bookings:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchBookings = async () => {
+  //     try {
+  //       const response = await apiService.getMyBookings();
+  //       setBookings(response.bookings || []);
+  //     } catch (error) {
+  //       console.error('Error fetching bookings:', error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
 
-    fetchBookings();
-  }, []);
+  //   fetchBookings();
+  // }, []);
+  useEffect(() => {
+  const fetchBookings = async () => {
+    try {
+      const response = await apiService.getMyBookings();
+      if (response?.bookings?.length) {
+        setBookings(response.bookings);
+      } else {
+        throw new Error("No bookings found");
+      }
+    } catch (error) {
+      console.warn('Using dummy bookings due to error or empty response:', error);
+
+      // ✅ Dummy bookings fallback
+      setBookings([
+        {
+          id: 'b1',
+          provider: { name: 'Ankit Yadav' },
+          category: 'AC Repair',
+          location: 'Hazratganj, Lucknow',
+          status: 'COMPLETED',
+          price: 500,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'b2',
+          provider: { name: 'Neha Singh' },
+          category: 'Salon Services',
+          location: 'Alambagh, Lucknow',
+          status: 'PENDING',
+          price: 700,
+          createdAt: new Date().toISOString(),
+        },
+        {
+          id: 'b3',
+          provider: { name: 'Ravi Verma' },
+          category: 'Home Cleaning',
+          location: 'Indira Nagar, Lucknow',
+          status: 'CANCELLED',
+          price: 400,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchBookings();
+}, []);
+
 
   const recentBookings = bookings.slice(0, 3);
   const stats = {
@@ -74,7 +124,7 @@ export function UserDashboard() {
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
                     <span className="text-sm font-medium">
-                      {booking.provider?.name?.charAt(0) || 'P'}
+                      {booking.provider?.name?.charAt(0) || ""}
                     </span>
                   </div>
                   <div>
