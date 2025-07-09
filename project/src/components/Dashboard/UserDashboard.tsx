@@ -38,80 +38,82 @@ export function UserDashboard() {
     }).format(amount);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <header className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
-        <p className="text-gray-600">Here’s your recent booking activity</p>
-      </header>
+    <div className="min-h-screen bg-[#f8f9fa]">
+      <div className="p-6 max-w-7xl mx-auto">
+        <header className="mb-8">
+          <h1 className="text-3xl font-bold mb-2 text-gray-900">Welcome back!</h1>
+          <p className="text-gray-700">Here’s your recent booking activity</p>
+        </header>
 
-      {/* 📊 Stats Overview */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard icon={<Calendar className="w-8 h-8 text-gray-400" />} title="Total Bookings" value={stats.total} />
-        <StatCard icon={<Star className="w-8 h-8 text-green-400" />} title="Completed" value={stats.completed} textColor="text-green-600" />
-        <StatCard icon={<Clock className="w-8 h-8 text-orange-400" />} title="Pending" value={stats.pending} textColor="text-orange-600" />
-        <StatCard
-          icon={<TrendingUp className="w-8 h-8 text-blue-400" />}
-          title="Success Rate"
-          value={`${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%`}
-          textColor="text-blue-600"
-        />
-      </section>
+        {/* 📊 Stats Overview */}
+        <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <StatCard icon={<Calendar className="w-8 h-8 text-gray-400" />} title="Total Bookings" value={stats.total} />
+          <StatCard icon={<Star className="w-8 h-8 text-green-400" />} title="Completed" value={stats.completed} textColor="text-green-600" />
+          <StatCard icon={<Clock className="w-8 h-8 text-orange-400" />} title="Pending" value={stats.pending} textColor="text-orange-600" />
+          <StatCard
+            icon={<TrendingUp className="w-8 h-8 text-blue-400" />}
+            title="Success Rate"
+            value={`${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%`}
+            textColor="text-blue-600"
+          />
+        </section>
 
-      {/* 📅 Recent Bookings */}
-      <section className="bg-white rounded-xl border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold mb-4">Recent Bookings</h2>
+        {/* 📅 Recent Bookings */}
+        <section className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <h2 className="text-xl font-semibold mb-4 text-gray-900">Recent Bookings</h2>
 
-        {loading ? (
-          <div className="space-y-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="animate-pulse h-20 bg-gray-200 rounded-lg"></div>
-            ))}
-          </div>
-        ) : recentBookings.length > 0 ? (
-          <div className="space-y-4">
-            {recentBookings.map(booking => (
-              <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-sm font-medium">
-                      {booking.provider?.name?.charAt(0) || 'P'}
+          {loading ? (
+            <div className="space-y-4">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="animate-pulse h-20 bg-gray-200 rounded-lg"></div>
+              ))}
+            </div>
+          ) : recentBookings.length > 0 ? (
+            <div className="space-y-4">
+              {recentBookings.map(booking => (
+                <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                      <span className="text-sm font-medium text-gray-800">
+                        {booking.provider?.name?.charAt(0) || 'P'}
+                      </span>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-800">{booking.category}</h3>
+                      <p className="text-sm text-gray-600 flex items-center">
+                        <MapPin className="w-4 h-4 mr-1" />
+                        {booking.location}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="text-right">
+                    <span
+                      className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        booking.status === 'COMPLETED'
+                          ? 'bg-green-100 text-green-800'
+                          : booking.status === 'PENDING'
+                          ? 'bg-orange-100 text-orange-800'
+                          : booking.status === 'ACCEPTED'
+                          ? 'bg-blue-100 text-blue-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {booking.status}
                     </span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{booking.category}</h3>
-                    <p className="text-sm text-gray-600 flex items-center">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {booking.location}
-                    </p>
+                    <p className="text-sm text-gray-600 mt-1">{formatCurrency(booking.price)}</p>
                   </div>
                 </div>
-
-                <div className="text-right">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      booking.status === 'COMPLETED'
-                        ? 'bg-green-100 text-green-800'
-                        : booking.status === 'PENDING'
-                        ? 'bg-orange-100 text-orange-800'
-                        : booking.status === 'ACCEPTED'
-                        ? 'bg-blue-100 text-blue-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {booking.status}
-                  </span>
-                  <p className="text-sm text-gray-600 mt-1">{formatCurrency(booking.price)}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-8">
-            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-600">No bookings yet. Start by finding a service!</p>
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-600">No bookings yet. Start by finding a service!</p>
+            </div>
+          )}
+        </section>
+      </div>
     </div>
   );
 }
@@ -124,9 +126,9 @@ interface StatCardProps {
   textColor?: string;
 }
 
-function StatCard({ icon, title, value, textColor = 'text-black' }: StatCardProps) {
+function StatCard({ icon, title, value, textColor = 'text-gray-900' }: StatCardProps) {
   return (
-    <div className="bg-white p-6 rounded-xl border border-gray-200">
+    <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600">{title}</p>

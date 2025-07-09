@@ -1,7 +1,31 @@
-import React from 'react';
-import { Shield, Clock, Wallet, MessageCircle, Star, MapPin } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
+import AuthModal from '../Home/AuthModal';
+
+import {
+  Shield,
+  Clock,
+  Wallet,
+  MessageCircle,
+  Star,
+  MapPin,
+} from 'lucide-react';
 
 const Features: React.FC = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleBookClick = () => {
+    if (isAuthenticated) {
+      navigate('/book/cleaning'); // or your default service
+    } else {
+      setIsModalOpen(true);
+    }
+  };
+
   const features = [
     {
       icon: <Shield className="w-8 h-8 text-black" />,
@@ -42,7 +66,7 @@ const Features: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 bg-white">
+    <section className="py-20 bg-gradient-to-br from-white via-gray-100 to-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
@@ -79,11 +103,22 @@ const Features: React.FC = () => {
           <p className="text-lg mb-6 opacity-90">
             Join thousands of satisfied customers who trust SewaSetu for their home service needs
           </p>
-          <button className="bg-white text-black px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+          <button
+            onClick={handleBookClick}
+            className="bg-white text-black px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+          >
             Book Your First Service
           </button>
         </div>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        initialMode="login"
+        redirectPath="/book/cleaning"
+      />
     </section>
   );
 };

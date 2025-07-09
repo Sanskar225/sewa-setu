@@ -1,8 +1,24 @@
-import React from 'react';
-import { Facebook, Twitter, Instagram, Linkedin as LinkedIn, Mail, Phone, MapPin } from 'lucide-react';
+import React from "react";
+import {
+  Facebook,
+  Twitter,
+  Instagram,
+  Linkedin as LinkedIn,
+  Mail,
+  Phone,
+  MapPin,
+} from "lucide-react";
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+
+  // Scroll handler
+  const scrollToServices = () => {
+    const section = document.getElementById("services");
+    if (section) {
+      section.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -17,7 +33,8 @@ const Footer: React.FC = () => {
               <span className="text-xl font-bold">SewaSetu</span>
             </div>
             <p className="text-gray-400 text-sm leading-relaxed">
-              Your trusted partner for professional home services. Quality, convenience, and reliability at your doorstep.
+              Your trusted partner for professional home services. Quality,
+              convenience, and reliability at your doorstep.
             </p>
             <div className="flex space-x-4">
               <button className="w-8 h-8 bg-gray-800 hover:bg-gray-700 rounded-full flex items-center justify-center transition-colors">
@@ -39,12 +56,23 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm">
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Home Cleaning</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Repairs & Maintenance</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Beauty & Wellness</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Electrical Services</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Plumbing</a></li>
-              <li><a href="#" className="text-gray-400 hover:text-white transition-colors">Painting</a></li>
+              {[
+                "Home Cleaning",
+                "Repairs & Maintenance",
+                "Beauty & Wellness",
+                "Electrical Services",
+                "Plumbing",
+                "Painting",
+              ].map((service, index) => (
+                <li key={index}>
+                  <button
+                    onClick={scrollToServices}
+                    className="text-gray-400 hover:text-white transition-colors"
+                  >
+                    {service}
+                  </button>
+                </li>
+              ))}
             </ul>
           </div>
 
@@ -67,18 +95,18 @@ const Footer: React.FC = () => {
             <div className="space-y-3 text-sm">
               <div className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 text-white" />
-                <span className="text-gray-400">+1 (555) 123-4567</span>
+                <span className="text-gray-400">+91 7905361332 , +91 7599015656</span>
               </div>
               <div className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-white" />
-                <span className="text-gray-400">hello@sewasetu.com</span>
+                <span className="text-gray-400">aditya3012singh@gmail.com , sanskarsinha225@gmail.com</span>
               </div>
               <div className="flex items-center space-x-3">
                 <MapPin className="w-4 h-4 text-white" />
-                <span className="text-gray-400">123 Service Street, City, State 12345</span>
+                <span className="text-gray-400">Gomtinagar, Lucknow, UP</span>
               </div>
             </div>
-            
+
             <div className="mt-6">
               <h4 className="font-medium mb-2">Stay Updated</h4>
               <div className="flex">

@@ -5,35 +5,35 @@ const Testimonials: React.FC = () => {
   const testimonials = [
     {
       id: 1,
-      name: 'Sarah Johnson',
-      role: 'Homeowner',
+      name: 'Priya Sharma',
+      role: 'Homeowner, Lucknow',
       rating: 5,
       comment: 'Excellent service! The cleaning team was professional and thorough. My house has never looked better.',
-      image: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: 'https://images.pexels.com/photos/1595391/pexels-photo-1595391.jpeg?auto=compress&cs=tinysrgb&w=400',
     },
     {
       id: 2,
-      name: 'Michael Chen',
-      role: 'Business Owner',
+      name: 'Rohit Verma',
+      role: 'Business Owner, Lucknow',
       rating: 5,
       comment: 'The repair service was quick and efficient. Fixed my electrical issue within hours of booking.',
-      image: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: 'https://images.pexels.com/photos/3564440/pexels-photo-3564440.jpeg?auto=compress&cs=tinysrgb&w=400',
     },
     {
       id: 3,
-      name: 'Emily Rodriguez',
-      role: 'Working Professional',
+      name: 'Anjali Mehta',
+      role: 'Working Professional, Lucknow',
       rating: 5,
       comment: 'Love the convenience! Beauty services at home save me so much time. Highly recommended.',
-      image: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=400',
     },
     {
       id: 4,
-      name: 'David Kumar',
-      role: 'Tech Professional',
+      name: 'Aman Singh',
+      role: 'Tech Professional, Lucknow',
       rating: 5,
       comment: 'The app is so easy to use and the service providers are always punctual and professional.',
-      image: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=400',
+      image: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=400',
     },
   ];
 
@@ -66,13 +66,13 @@ const Testimonials: React.FC = () => {
                   <p className="text-sm text-gray-600">{testimonial.role}</p>
                 </div>
               </div>
-              
+
               <div className="flex items-center mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
                   <Star key={i} className="w-4 h-4 fill-gray-800 text-gray-800" />
                 ))}
               </div>
-              
+
               <Quote className="w-6 h-6 text-gray-600 mb-2" />
               <p className="text-gray-700 text-sm leading-relaxed">
                 {testimonial.comment}
