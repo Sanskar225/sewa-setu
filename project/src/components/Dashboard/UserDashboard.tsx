@@ -8,94 +8,68 @@ export function UserDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const fetchBookings = async () => {
+      try {
+        const response = await apiService.getMyBookings();
+        setBookings(response.bookings || []);
+      } catch (error) {
+        console.error('Error fetching bookings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchBookings();
   }, []);
 
-  const fetchBookings = async () => {
-    try {
-      const response = await apiService.getMyBookings();
-      setBookings(response.bookings);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const recentBookings = bookings.slice(0, 3);
   const stats = {
-    totalBookings: bookings.length,
+    total: bookings.length,
     completed: bookings.filter(b => b.status === 'COMPLETED').length,
     pending: bookings.filter(b => b.status === 'PENDING').length,
     cancelled: bookings.filter(b => b.status === 'CANCELLED').length,
   };
 
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 0,
+    }).format(amount);
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
+      <header className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Welcome back!</h1>
-        <p className="text-gray-600">Here's what's happening with your bookings</p>
-      </div>
+        <p className="text-gray-600">Here’s your recent booking activity</p>
+      </header>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Total Bookings</p>
-              <p className="text-2xl font-bold">{stats.totalBookings}</p>
-            </div>
-            <Calendar className="w-8 h-8 text-gray-400" />
-          </div>
-        </div>
+      {/* 📊 Stats Overview */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard icon={<Calendar className="w-8 h-8 text-gray-400" />} title="Total Bookings" value={stats.total} />
+        <StatCard icon={<Star className="w-8 h-8 text-green-400" />} title="Completed" value={stats.completed} textColor="text-green-600" />
+        <StatCard icon={<Clock className="w-8 h-8 text-orange-400" />} title="Pending" value={stats.pending} textColor="text-orange-600" />
+        <StatCard
+          icon={<TrendingUp className="w-8 h-8 text-blue-400" />}
+          title="Success Rate"
+          value={`${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%`}
+          textColor="text-blue-600"
+        />
+      </section>
 
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-green-600">{stats.completed}</p>
-            </div>
-            <Star className="w-8 h-8 text-green-400" />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-orange-600">{stats.pending}</p>
-            </div>
-            <Clock className="w-8 h-8 text-orange-400" />
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Success Rate</p>
-              <p className="text-2xl font-bold text-blue-600">
-                {stats.totalBookings > 0 ? Math.round((stats.completed / stats.totalBookings) * 100) : 0}%
-              </p>
-            </div>
-            <TrendingUp className="w-8 h-8 text-blue-400" />
-          </div>
-        </div>
-      </div>
-
-      {/* Recent Bookings */}
-      <div className="bg-white rounded-xl border border-gray-200 p-6">
+      {/* 📅 Recent Bookings */}
+      <section className="bg-white rounded-xl border border-gray-200 p-6">
         <h2 className="text-xl font-semibold mb-4">Recent Bookings</h2>
+
         {loading ? (
           <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <div key={i} className="animate-pulse">
-                <div className="h-20 bg-gray-200 rounded-lg"></div>
-              </div>
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="animate-pulse h-20 bg-gray-200 rounded-lg"></div>
             ))}
           </div>
         ) : recentBookings.length > 0 ? (
           <div className="space-y-4">
-            {recentBookings.map((booking) => (
+            {recentBookings.map(booking => (
               <div key={booking.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
@@ -111,16 +85,22 @@ export function UserDashboard() {
                     </p>
                   </div>
                 </div>
+
                 <div className="text-right">
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    booking.status === 'COMPLETED' ? 'bg-green-100 text-green-800' :
-                    booking.status === 'PENDING' ? 'bg-orange-100 text-orange-800' :
-                    booking.status === 'ACCEPTED' ? 'bg-blue-100 text-blue-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      booking.status === 'COMPLETED'
+                        ? 'bg-green-100 text-green-800'
+                        : booking.status === 'PENDING'
+                        ? 'bg-orange-100 text-orange-800'
+                        : booking.status === 'ACCEPTED'
+                        ? 'bg-blue-100 text-blue-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}
+                  >
                     {booking.status}
                   </span>
-                  <p className="text-sm text-gray-600 mt-1">₹{booking.price}</p>
+                  <p className="text-sm text-gray-600 mt-1">{formatCurrency(booking.price)}</p>
                 </div>
               </div>
             ))}
@@ -131,6 +111,28 @@ export function UserDashboard() {
             <p className="text-gray-600">No bookings yet. Start by finding a service!</p>
           </div>
         )}
+      </section>
+    </div>
+  );
+}
+
+// 🧩 Reusable Stat Card Component
+interface StatCardProps {
+  icon: React.ReactNode;
+  title: string;
+  value: string | number;
+  textColor?: string;
+}
+
+function StatCard({ icon, title, value, textColor = 'text-black' }: StatCardProps) {
+  return (
+    <div className="bg-white p-6 rounded-xl border border-gray-200">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm text-gray-600">{title}</p>
+          <p className={`text-2xl font-bold ${textColor}`}>{value}</p>
+        </div>
+        {icon}
       </div>
     </div>
   );

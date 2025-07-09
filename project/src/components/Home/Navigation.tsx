@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Menu, X, Search, User, ShoppingCart, Bell, LogOut } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import AuthModal from './AuthModal';
 
 const Navigation: React.FC = () => {

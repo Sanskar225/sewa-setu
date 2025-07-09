@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Wrench, Sparkles, Scissors, Zap, Car, Palette, Home, Heart } from 'lucide-react';
-import ServiceDetails from './ServiceDetails';
+import ServiceDetails from '../Home/AuthModal';
 
 const ServiceCategories: React.FC = () => {
   const [selectedService, setSelectedService] = useState<string | null>(null);
