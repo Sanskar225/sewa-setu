@@ -1,16 +1,23 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { apiService } from '../services/api'; // Adjust path as needed
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
-  signup: (name: string, email: string, password: string) => Promise<boolean>;
+  signup: (
+    name: string,
+    email: string,
+    password: string,
+    phone: string,
+    role: 'USER' | 'PROVIDER'
+  ) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
 }
@@ -19,9 +26,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
@@ -33,15 +38,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Load user from localStorage on mount
   useEffect(() => {
-    // Check if user is logged in on app start
     const token = localStorage.getItem('token');
-    const userData = localStorage.getItem('user');
-    
-    if (token && userData) {
+    const storedUser = localStorage.getItem('user');
+
+    if (token && storedUser) {
       try {
-        setUser(JSON.parse(userData));
-      } catch (error) {
+        const parsed = JSON.parse(storedUser);
+        setUser(parsed);
+      } catch (err) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
@@ -49,69 +55,56 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(false);
   }, []);
 
+  // 🔐 Login
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      // Simulate API call - replace with actual API endpoint
-      const response = await fetch('/api/auth/signin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.jwt);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
+      const res = await apiService.login(email, password);
+      if (res.jwt && res.user) {
+        localStorage.setItem('token', res.jwt);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        setUser(res.user);
         return true;
       }
-      return false;
-    } catch (error) {
-      console.error('Login error:', error);
-      return false;
+    } catch (err) {
+      console.error('Login failed:', err);
     }
+    return false;
   };
 
-  const signup = async (name: string, email: string, password: string): Promise<boolean> => {
+  // 🧾 Signup
+  const signup = async (
+    name: string,
+    email: string,
+    password: string,
+    phone: string,
+    role: 'USER' | 'PROVIDER'
+  ): Promise<boolean> => {
     try {
-      // Simulate API call - replace with actual API endpoint
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        setUser(data.user);
+      const res = await apiService.signup({ name, email, password, phone, role });
+      if (res.token && res.user) {
+        localStorage.setItem('token', res.token);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        setUser(res.user);
         return true;
       }
-      return false;
-    } catch (error) {
-      console.error('Signup error:', error);
-      return false;
+    } catch (err) {
+      console.error('Signup failed:', err);
     }
+    return false;
   };
 
+  // 🔓 Logout
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
   };
 
-  const value = {
-    user,
-    login,
-    signup,
-    logout,
-    loading,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, login, signup, logout, loading }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

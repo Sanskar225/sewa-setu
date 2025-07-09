@@ -48,6 +48,7 @@ function App() {
           
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<UserDashboard />} />
+            {/* <Route path="/dashboard/jobs" element={<JobsDashboard />} /> */}
             <Route path="services" element={<ServiceSearch />} />
             <Route path="bookings" element={<BookingsList />} />
             <Route path="payments" element={<PaymentDashboard />} />
