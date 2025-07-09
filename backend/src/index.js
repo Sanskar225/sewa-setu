@@ -26,6 +26,7 @@ import matchRoutes from "./routes/match.js";
 import { setupMatchingSocket } from "./socket/matchHandler.js";
 
 dotenv.config();
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
