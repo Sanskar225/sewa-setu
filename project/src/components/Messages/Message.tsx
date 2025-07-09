@@ -11,7 +11,12 @@ interface Message {
   createdAt: string;
 }
 
-export function MessagesDashboard() {
+interface MessagesDashboardProps {
+  receiverId: string;       // ID of the provider or user you are chatting with
+  chatActive: boolean;      // ✅ whether chat should be shown
+}
+
+export function MessagesDashboard({ receiverId, chatActive }: MessagesDashboardProps) {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -19,12 +24,14 @@ export function MessagesDashboard() {
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
+    if (!chatActive) return;
+
     fetchMessages();
-  }, []);
+  }, [chatActive]);
 
   const fetchMessages = async () => {
     try {
-      const response = await apiService.request('/messages'); // Customize endpoint
+      const response = await apiService.request(`/messages/${receiverId}`);
       setMessages(response.messages || []);
     } catch (error) {
       console.error('Failed to fetch messages:', error);
@@ -38,9 +45,12 @@ export function MessagesDashboard() {
 
     try {
       setSending(true);
-      const res = await apiService.request('/messages/send', {
+      const res = await apiService.request('/messages', {
         method: 'POST',
-        body: JSON.stringify({ content: newMessage }),
+        body: JSON.stringify({
+          receiverId,
+          content: newMessage,
+        }),
       });
 
       setMessages((prev) => [...prev, res.message]);
@@ -52,11 +62,20 @@ export function MessagesDashboard() {
     }
   };
 
+  if (!chatActive) {
+    return (
+      <div className="text-center text-gray-500 py-10">
+        <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+        <p>Chat is disabled because the booking is completed or cancelled.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Messages</h1>
-        <p className="text-gray-600">View and respond to your service chats</p>
+        <p className="text-gray-600">Chat with your service provider/user</p>
       </div>
 
       {/* Chat Box */}

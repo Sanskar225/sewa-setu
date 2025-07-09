@@ -94,31 +94,31 @@ router.post("/verify-otp", async (req, res) => {
   }
 });
 // ✅ Route to generate OTP (PHONE)
-router.post("/generate-otp-phone", async (req, res) => {
-  const phone = req.body.phone;
-  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+// router.post("/generate-otp-phone", async (req, res) => {
+//   const phone = req.body.phone;
+//   const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-  await redis.set(`otp:phone:${phone}`, otpCode, "EX", 600);
+//   await redis.set(`otp:phone:${phone}`, otpCode, "EX", 600);
 
-  // Integrate with SMS service (e.g., Twilio, MSG91)
-  console.log(`✅ Send OTP ${otpCode} to phone: ${phone}`);
+//   // Integrate with SMS service (e.g., Twilio, MSG91)
+//   console.log(`✅ Send OTP ${otpCode} to phone: ${phone}`);
 
-  res.json({ message: "OTP sent to phone!" });
-});
+//   res.json({ message: "OTP sent to phone!" });
+// });
 
-// ✅ Route to verify OTP (PHONE)
-router.post("/verify-otp-phone", async (req, res) => {
-  const { phone, code } = req.body;
-  const storedOtp = await redis.get(`otp:phone:${phone}`);
+// // ✅ Route to verify OTP (PHONE)
+// router.post("/verify-otp-phone", async (req, res) => {
+//   const { phone, code } = req.body;
+//   const storedOtp = await redis.get(`otp:phone:${phone}`);
 
-  if (!storedOtp || storedOtp !== code) {
-    return res.status(400).json({ message: "Invalid or expired OTP" });
-  }
+//   if (!storedOtp || storedOtp !== code) {
+//     return res.status(400).json({ message: "Invalid or expired OTP" });
+//   }
 
-  await redis.del(`otp:phone:${phone}`);
-  await redis.set(`verified:phone:${phone}`, "true", "EX", 600);
-  res.json({ message: "Phone OTP verified. You can now sign up." });
-});
+//   await redis.del(`otp:phone:${phone}`);
+//   await redis.set(`verified:phone:${phone}`, "true", "EX", 600);
+//   res.json({ message: "Phone OTP verified. You can now sign up." });
+// });
 
 
 
@@ -227,11 +227,10 @@ router.post("/signup", async (req, res) => {
         role: user.role,
       },
     });
-  } catch (e) {
-    console.log(error)
-    console.error(e);
-    res.status(500).json({ message: "Internal server error" });
-  }
+} catch (error) {
+  console.error("Signup Error:", error);
+  res.status(500).json({ message: "Internal server error" });
+}
 });
 
 // ✅ Signin route

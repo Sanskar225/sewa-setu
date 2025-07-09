@@ -1,7 +1,27 @@
+import { response } from "express";
+
 const API_BASE_URL = 'http://localhost:8000/api/v1';
 
+let forceLogoutFn: () => void = () => {};
+export const setForceLogout = (fn: () => void) => {
+  forceLogoutFn = fn;
+};
 class APIService {
-  private getHeaders() {
+  async checkAdminExists() {
+    const response = await fetch(`${API_BASE_URL}/user/check-admin`, {
+      headers: { 'Content-Type': 'application/json' },
+    });
+    return this.handleResponse(response);
+  }
+  
+async checkUserExists(email: string) {
+  const response = await fetch(`${API_BASE_URL}/user/check-user?email=${encodeURIComponent(email)}`, {
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return this.handleResponse(response); // will return { exists: true/false }
+}
+
+  private getAuthHeaders() {
     const token = localStorage.getItem('token');
     return {
       'Content-Type': 'application/json',
@@ -9,11 +29,31 @@ class APIService {
     };
   }
 
+  private async handleResponse(response: Response) {
+  if (response.status === 403) {
+    forceLogoutFn(); // will use global router now
+    return;
+  }
+
+  let data;
+  try {
+    data = await response.json();
+  } catch (e) {
+    throw new Error('Invalid response format.');
+  }
+
+  if (!response.ok) {
+    throw new Error(data?.message || 'Unexpected error');
+  }
+
+  return data;
+  }
+
   async request(endpoint: string, options: RequestInit = {}) {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       ...options,
       headers: {
-        ...this.getHeaders(),
+        ...this.getAuthHeaders(),
         ...options.headers,
       },
     });
@@ -25,144 +65,60 @@ class APIService {
     return response.json();
   }
 
-  // ----------------------
-  // 🔐 AUTH
-  // ----------------------
-  async login(email: string, password: string) {
-    return this.request('/auth/signin', {
+  async generateOtp(email: string) {
+    const response=await fetch(`${API_BASE_URL}/user/generate-otp`,{
       method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
+    })
+    return this.handleResponse(response)
   }
 
-  async signup(data: {
+  async verifyOtp(email: string, code: string) {
+    const response = await fetch(`${API_BASE_URL}/user/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, code }),
+    });
+    return this.handleResponse(response);
+  }
+  
+  async signup(userData: {    
     name: string;
     email: string;
     phone: string;
     password: string;
     role?: 'USER' | 'PROVIDER' | 'ADMIN';
   }) {
-    return this.request('/user/signup', {
+    const response = await fetch(`${API_BASE_URL}/user/signup`, {
       method: 'POST',
-      body: JSON.stringify(data),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
     });
+    return this.handleResponse(response);
   }
 
-  async generateOtp(email: string) {
-    return this.request('/user/generate-otp', {
+  async signin(email: string, password: string) {
+    const response = await fetch(`${API_BASE_URL}/user/signin`, {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
-  }
-
-  async verifyOtp(email: string, code: string) {
-    return this.request('/user/verify-otp', {
-      method: 'POST',
-      body: JSON.stringify({ email, code }),
-    });
+    return this.handleResponse(response);
   }
 
   async getCurrentUser() {
     return this.request('/user/me');
   }
 
-  async updateProfile(data: { name?: string; phone?: string }) {
-    return this.request('/user/update-profile', {
+  async updateProfile(data: { name?: string; password?: string }) {
+    const response = await fetch(`${API_BASE_URL}/user/update-profile`, {
       method: 'PUT',
+      headers: this.getAuthHeaders(),
       body: JSON.stringify(data),
     });
-  }
-
-  // ----------------------
-  // 👨‍🔧 PROVIDERS
-  // ----------------------
-  async getProviders() {
-    return this.request('/provider-profile/all');
-  }
-
-  async createProviderProfile(data: any) {
-    return this.request('/provider-profile', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getNearbyProviders(latitude: number, longitude: number, radiusKm: number = 10) {
-    return this.request('/match/nearby', {
-      method: 'POST',
-      body: JSON.stringify({ latitude, longitude, radiusKm }),
-    });
-  }
-
-  // ----------------------
-  // 📅 BOOKINGS
-  // ----------------------
-  async createBooking(data: any) {
-    return this.request('/bookings', {
-      method: 'POST',
-      body: JSON.stringify(data),
-    });
-  }
-
-  async getMyBookings() {
-    return this.request('/bookings/my-bookings');
-  }
-
-  async updateBookingStatus(bookingId: string, status: string) {
-    return this.request(`/bookings/${bookingId}/status`, {
-      method: 'PUT',
-      body: JSON.stringify({ status }),
-    });
-  }
-
-  // ----------------------
-  // 📂 SERVICE CATEGORIES
-  // ----------------------
-  async getServiceCategories() {
-    return this.request('/service-categories');
-  }
-
-  // ----------------------
-  // 💰 WALLET
-  // ----------------------
-  async getWallet() {
-    return this.request('/wallet');
-  }
-
-  async topupWallet(amount: number) {
-    return this.request('/wallet/topup', {
-      method: 'POST',
-      body: JSON.stringify({ amount }),
-    });
-  }
-
-  // ----------------------
-  // 🌟 REVIEWS
-  // ----------------------
-  async getProviderReviews(providerId: string) {
-    return this.request(`/reviews/provider/${providerId}`);
-  }
-
-  async createReview(providerId: string, rating: number, comment: string) {
-    return this.request('/reviews', {
-      method: 'POST',
-      body: JSON.stringify({ providerId, rating, comment }),
-    });
-  }
-
-  // ----------------------
-  // 💬 MESSAGES
-  // ----------------------
-  async getMessages(receiverId: string) {
-    return this.request(`/messages/${receiverId}`);
-  }
-
-  async sendMessage(receiverId: string, content: string) {
-    return this.request('/messages', {
-      method: 'POST',
-      body: JSON.stringify({ receiverId, content }),
-    });
+    return this.handleResponse(response);
   }
 }
 
-export const apiService = new APIService();
+export const apiService = new APIService()

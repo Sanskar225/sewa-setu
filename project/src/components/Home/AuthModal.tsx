@@ -39,7 +39,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
       if (mode === 'login') {
         success = await login(formData.email, formData.password);
       } else {
-        success = await signup(formData.name, formData.email, formData.password);
+        success = await signup(formData.name, formData.email, formData.password, formData.phone );
       }
 
       if (success) {

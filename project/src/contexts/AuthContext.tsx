@@ -5,18 +5,20 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { apiService } from '../services/api'; // Adjust path as needed
-import { User } from '../types';
+import { apiService } from '../services/api'; // Adjust path if needed
+import { User } from '../types'; // Make sure your User type is correctly defined
 
+// Updated interface to include setUser
 interface AuthContextType {
   user: User | null;
+  setUser: (user: User | null) => void; // ✅ Included setUser
   login: (email: string, password: string) => Promise<boolean>;
   signup: (
     name: string,
     email: string,
     password: string,
     phone: string,
-    role: 'USER' | 'PROVIDER'
+    role: 'USER' | 'PROVIDER' | 'ADMIN'
   ) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
@@ -24,9 +26,12 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Custom hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within an AuthProvider');
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
   return context;
 };
 
@@ -58,7 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // 🔐 Login
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
-      const res = await apiService.login(email, password);
+      const res = await apiService.signin(email, password);
       if (res.jwt && res.user) {
         localStorage.setItem('token', res.jwt);
         localStorage.setItem('user', JSON.stringify(res.user));
@@ -77,7 +82,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     email: string,
     password: string,
     phone: string,
-    role: 'USER' | 'PROVIDER'
+    role: 'USER' | 'PROVIDER' | 'ADMIN'
   ): Promise<boolean> => {
     try {
       const res = await apiService.signup({ name, email, password, phone, role });
@@ -102,7 +107,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, signup, logout, loading }}
+      value={{ user, setUser, login, signup, logout, loading }}
     >
       {children}
     </AuthContext.Provider>

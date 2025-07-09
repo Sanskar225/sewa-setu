@@ -21,6 +21,9 @@ import DownloadApp from './components/Home/DownloadApp';
 import Footer from './components/Home/Footer';
 import ProfilePage from './components/Home/ProfilePage';
 import { LoginForm } from './components/Auth/LoginForm';
+import { TestChat } from './components/Messages/TestChat';
+import SignupForm from './components/Auth/SignupForm';
+
 
 function HomePage() {
   return (
@@ -44,6 +47,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginForm />} />
+          <Route path="/signup" element={<SignupForm/>}/>
           <Route path="/profile" element={<ProfilePage />} />
           
           <Route path="/dashboard" element={<DashboardLayout />}>
@@ -52,9 +56,10 @@ function App() {
             <Route path="services" element={<ServiceSearch />} />
             <Route path="bookings" element={<BookingsList />} />
             <Route path="payments" element={<PaymentDashboard />} />
-            <Route path="messages" element={<MessagesDashboard />} />
+            <Route path="messages" element={<MessagesDashboard receiverId={''} chatActive={false} />} />
             <Route path="reviews" element={<ReviewsDashboard />} />
             <Route path="settings" element={<SettingsDashboard />} />
+            <Route path="test-chat" element={<TestChat />} />
           </Route>
         </Routes>
       </Router>

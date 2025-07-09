@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom'; // ✅ Add this
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function LoginForm() {
   const { login } = useAuth();
+  const navigate = useNavigate(); // ✅ Hook to redirect
+
   const [formData, setFormData] = useState({
     email: '',
-    password: ''
+    password: '',
+    phone: ''
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -18,9 +22,14 @@ export function LoginForm() {
     setError('');
 
     try {
-      await login(formData.email, formData.password);
+      const success = await login(formData.email, formData.password);
+      if (success) {
+        navigate('/dashboard'); // ✅ Redirect to dashboard
+      } else {
+        setError('Invalid credentials. Please try again.');
+      }
     } catch (error) {
-      setError('Invalid credentials. Please try again.');
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -46,7 +55,7 @@ export function LoginForm() {
               <input
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({...formData, email: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent"
                 placeholder="Enter your email"
                 required
@@ -61,7 +70,7 @@ export function LoginForm() {
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
-                  onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent pr-12"
                   placeholder="Enter your password"
                   required
@@ -101,7 +110,7 @@ export function LoginForm() {
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{' '}
-              <a href="#" className="text-black font-medium hover:underline">
+              <a href="/signup" className="text-black font-medium hover:underline">
                 Sign up
               </a>
             </p>

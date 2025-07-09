@@ -112,6 +112,14 @@ export interface File {
   createdAt: string;
 }
 
+export interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  logout: () => void;
+  isLoading: boolean;
+  setUser: (user: User | null) => void; // ✅ Add this
+}
+
 // Availability Slot
 export interface AvailabilitySlot {
   id: string;
