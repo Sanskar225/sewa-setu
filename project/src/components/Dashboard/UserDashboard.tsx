@@ -102,7 +102,7 @@ export function UserDashboard() {
         <StatCard
           icon={<TrendingUp className="w-8 h-8 text-blue-400" />}
           title="Success Rate"
-          value={${stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%}
+          value={stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}
           textColor="text-blue-600"
         />
       </section>
@@ -180,7 +180,7 @@ function StatCard({ icon, title, value, textColor = 'text-black' }: StatCardProp
       <div className="flex items-center justify-between">
         <div>
           <p className="text-sm text-gray-600">{title}</p>
-          <p className={text-2xl font-bold ${textColor}}>{value}</p>
+          <p className={`text-2xl font-bold ${textColor}`}>{value}</p>
         </div>
         {icon}
       </div>

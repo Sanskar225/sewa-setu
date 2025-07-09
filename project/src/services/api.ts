@@ -7,6 +7,9 @@ export const setForceLogout = (fn: () => void) => {
   forceLogoutFn = fn;
 };
 class APIService {
+  getMyBookings() {
+    throw new Error('Method not implemented.');
+  }
   async checkAdminExists() {
     const response = await fetch(`${API_BASE_URL}/user/check-admin`, {
       headers: { 'Content-Type': 'application/json' },
@@ -83,13 +86,13 @@ async checkUserExists(email: string) {
     return this.handleResponse(response);
   }
   
-  async signup(userData: {    
-    name: string;
-    email: string;
-    phone: string;
-    password: string;
-    role?: 'USER' | 'PROVIDER' | 'ADMIN';
-  }) {
+  async signup(name: string, email: string, phone: string, role: string, password: string, userData: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  role?: 'USER' | 'PROVIDER' | 'ADMIN';
+}) {
     const response = await fetch(`${API_BASE_URL}/user/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -97,6 +100,7 @@ async checkUserExists(email: string) {
     });
     return this.handleResponse(response);
   }
+
 
   async signin(email: string, password: string) {
     const response = await fetch(`${API_BASE_URL}/user/signin`, {

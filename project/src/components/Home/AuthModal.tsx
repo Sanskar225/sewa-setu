@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { X, Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
+import { X, Mail, Lock, User, Eye, EyeOff, Phone, Shield } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { apiService } from '../../services/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -17,11 +18,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
   redirectPath = '/',
 }) => {
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-  });
+  const [formData, setFormData] = useState<{
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  role: 'USER' | 'PROVIDER' | 'ADMIN' | ''; // '' for initial empty state
+}>({
+  name: '',
+  email: '',
+  phone: '',
+  password: '',
+  role: '',
+});
+
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -37,14 +47,20 @@ const AuthModal: React.FC<AuthModalProps> = ({
     try {
       let success = false;
       if (mode === 'login') {
-        success = await login(formData.email, formData.password);
+        success = await apiService.signin(formData.email, formData.password);
       } else {
-        success = await signup(formData.name, formData.email, formData.password, formData.phone );
+        success = await apiService.signup(
+          formData.name,
+          formData.email,
+          formData.phone,
+          formData.role,
+          formData.password
+        );
       }
 
       if (success) {
         onClose();
-        setFormData({ name: '', email: '', password: '' });
+        setFormData({ name: '', email: '', password: '', phone: '', role: '' });
         navigate(redirectPath);
       } else {
         setError(mode === 'login' ? 'Invalid credentials' : 'Signup failed');
@@ -56,7 +72,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
@@ -89,6 +105,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
+          {/* Name */}
           {mode === 'signup' && (
             <div className="relative">
               <User className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
@@ -104,6 +121,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </div>
           )}
 
+          {/* Email */}
           <div className="relative">
             <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
             <input
@@ -117,6 +135,42 @@ const AuthModal: React.FC<AuthModalProps> = ({
             />
           </div>
 
+          {/* Phone */}
+          {mode === 'signup' && (
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+              <input
+                type="text"
+                name="phone"
+                placeholder="Phone Number"
+                value={formData.phone}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 placeholder-gray-500"
+                required
+              />
+            </div>
+          )}
+
+          {/* Role Dropdown */}
+          {mode === 'signup' && (
+            <div className="relative">
+              <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleInputChange}
+                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
+                required
+              >
+                <option value="">Select Role</option>
+                <option value="USER">User</option>
+                <option value="PROVIDER">Provider</option>
+                <option value="ADMIN">Admin</option>
+              </select>
+            </div>
+          )}
+
+          {/* Password */}
           <div className="relative">
             <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
             <input
@@ -137,6 +191,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             </button>
           </div>
 
+          {/* Submit Button */}
           <button
             type="submit"
             disabled={loading}
@@ -145,6 +200,7 @@ const AuthModal: React.FC<AuthModalProps> = ({
             {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
 
+          {/* Switch Mode */}
           <div className="text-center">
             <button
               type="button"
