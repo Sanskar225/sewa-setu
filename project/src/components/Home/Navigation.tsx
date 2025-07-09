@@ -7,6 +7,8 @@ const Navigation: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [showSearchBox, setShowSearchBox] = useState(false);
+
   const { user, logout } = useAuth();
 
   const handleAuthClick = (mode: 'login' | 'signup') => {
@@ -31,7 +33,7 @@ const Navigation: React.FC = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center space-x-8">
-              <a href="#Hero.tsx" className="text-gray-300 hover:text-white font-medium transition-colors">
+              <a href="#Home" className="text-gray-300 hover:text-white font-medium transition-colors">
                 Home
               </a>
               <a href="#services" className="text-gray-300 hover:text-white font-medium transition-colors">
@@ -43,15 +45,28 @@ const Navigation: React.FC = () => {
               <a href="#about" className="text-gray-300 hover:text-white font-medium transition-colors">
                 About
               </a>
-              <a href="#contact" className="text-gray-300 hover:text-white font-medium transition-colors">
+              <a href="#footer" className="text-gray-300 hover:text-white font-medium transition-colors">
                 Contact
               </a>
             </div>
 
             {/* Desktop Actions */}
             <div className="hidden md:flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-white transition-colors">
+              <button
+                onClick={() => setShowSearchBox(!showSearchBox)}
+                className="relative p-2 text-gray-400 hover:text-white transition-colors"
+              >
                 <Search size={20} />
+                {showSearchBox && (
+                  <div className="absolute top-10 right-0 bg-white shadow-lg rounded-lg p-3 w-64 z-50">
+                    <input
+                      type="text"
+                      placeholder="Search services..."
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-500 text-black"
+                      autoFocus
+                    />
+                  </div>
+                )}
               </button>
 
               {user ? (

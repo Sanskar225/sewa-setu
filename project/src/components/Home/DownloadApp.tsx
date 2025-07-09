@@ -3,7 +3,7 @@ import { Smartphone, Download, QrCode } from 'lucide-react';
 
 const DownloadApp: React.FC = () => {
   return (
-    <section className="py-20 bg-gradient-to-r from-gray-800 to-black">
+    <section id="about"className="py-20 bg-gradient-to-r from-gray-800 to-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           {/* Left Content */}
