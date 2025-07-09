@@ -15,7 +15,7 @@ dotenv.config();
 
 const router = express.Router();
 const prisma = new PrismaClient();
-const redis = new Redis("redis://default:BDlobEnST3f4r66Gi5oJaIYK2nkUGXDE@redis-17225.crce179.ap-south-1-1.ec2.redns.redis-cloud.com:17225");
+const redis = new Redis("redis://127.0.0.1:6379");
 redis.ping().then(console.log); // Should log 'PONG'
 
 
@@ -39,7 +39,60 @@ export const otpHtmlTemplate = (otp) => `
   </div>
 `;
 
+router.post("/generate-otp", async (req, res) => {
+  console.log("hello from otp")
+  const email = req.body.email?.toLowerCase();
 
+  const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+  console.log(otpCode)
+  try {
+    console.log(process.env.EMAIL_USER)
+    console.log(process.env.EMAIL_PASS)
+    // Store OTP in Redis with 10-minute TTL
+  const result = await redis.set(`otp:${email}`, otpCode, "EX", 600);
+  console.log("✅ Redis SET result:", result); // Should log 'OK'
+
+    console.log("Ram")
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Your OTP Code",
+      text: `Your verification code is ${otpCode}`,
+    });
+
+    console.log("OTP sent to:", email);
+    res.json({ message: "OTP sent to email!" });
+  } catch (error) {
+    console.log("hello")
+    console.error("OTP error:", error);
+    res.status(500).json({ message: "Failed to send OTP" });
+  }
+});
+router.post("/verify-otp", async (req, res) => {
+  const email = req.body.email?.toLowerCase();
+  const code = req.body.code;
+  console.log("Incoming OTP verify body:", req.body);
+
+  try {
+    const storedOtp = await redis.get(`otp:${email}`);
+
+    console.log("✅ Email:", email);
+    console.log("✅ Sent OTP code:", code);
+    console.log("✅ Stored OTP from Redis:", storedOtp);
+
+    if (!storedOtp || storedOtp !== code) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+
+    await redis.del(`otp:${email}`);
+    await redis.set(`verified:${email}`, "true", "EX", 600);
+
+    return res.json({ message: "OTP verified. You can now sign up." });
+  } catch (error) {
+    console.error("OTP verification failed:", error);
+    return res.status(500).json({ message: "Failed to verify OTP." });
+  }
+});
 // ✅ Route to generate OTP (PHONE)
 router.post("/generate-otp-phone", async (req, res) => {
   const phone = req.body.phone;
@@ -111,7 +164,7 @@ router.post("/signup", async (req, res) => {
       return res.status(403).json({ errors: parsed.error.errors });
     }
 
-    const { email: rawEmail, name, password, role } = parsed.data;
+    const { email: rawEmail, name, password,phone, role } = parsed.data;
     const email = rawEmail.toLowerCase(); // 🔥 Normalize email early
 
       // Use lowercased email consistently below
@@ -150,6 +203,7 @@ router.post("/signup", async (req, res) => {
       data: {
         email,
         name,
+        phone,
         password: hashedPassword,
         role: role ?? "USER",
       },
@@ -251,7 +305,7 @@ router.get("/me", authMiddleware, async (req, res) => {
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: { id: true, name: true, email: true, role: true, phone:true, createdAt: true },
     });
 
     if (!user) {
