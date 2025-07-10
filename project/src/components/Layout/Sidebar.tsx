@@ -1,7 +1,7 @@
 import React from 'react';
 import { 
   Home, Search, Calendar, CreditCard, Star, Settings, Users,
-  MapPin, MessageSquare
+  MapPin, MessageSquare, Instagram, Linkedin, Facebook, Twitter
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -51,30 +51,49 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
   };
 
   return (
-    <div className={`bg-white border-r h-screen fixed lg:relative z-40 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} w-64`}>
-      <div className="p-6 border-b">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold">S</span>
-          </div>
-          <div>
-            <div className="font-semibold">PariChay</div>
-            <div className="text-xs text-gray-500">Professional Services</div>
+    <div className={`bg-black border-r h-screen fixed lg:relative z-40 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} w-64 flex flex-col justify-between`}>
+      <div>
+        <div className="p-6">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+              <span className="text-black font-bold">S</span>
+            </div>
+            <div>
+              <div className="font-semibold text-white">सेवासेतु</div>
+              <div className="text-xs text-white">Professional Services</div>
+            </div>
           </div>
         </div>
+
+        <nav className="mt-6">
+          {getMenuItems().map(item => (
+            <button
+              key={item.path}
+              onClick={() => onNavigate(item.path)}
+              className="w-full flex items-center space-x-3 px-6 py-3 text-left text-white hover:text-lg transition-all duration-200"
+            >
+              <item.icon className="w-5 h-5" />
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
       </div>
-      <nav className="mt-6">
-        {getMenuItems().map(item => (
-          <button
-            key={item.path}
-            onClick={() => onNavigate(item.path)}
-            className="w-full flex items-center space-x-3 px-6 py-3 text-left text-gray-700 hover:bg-gray-100"
-          >
-            <item.icon className="w-5 h-5" />
-            <span>{item.label}</span>
-          </button>
-        ))}
-      </nav>
+
+      {/* Social Media Icons */}
+      <div className="flex items-center justify-center space-x-4 p-4">
+        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-pink-500">
+          <Instagram size={20} />
+        </a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-500">
+          <Linkedin size={20} />
+        </a>
+        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-700">
+          <Facebook size={20} />
+        </a>
+        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400">
+          <Twitter size={20} />
+        </a>
+      </div>
     </div>
   );
 }
