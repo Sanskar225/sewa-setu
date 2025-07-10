@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { X, Mail, Lock, User, Eye, EyeOff, Phone, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Mail, Lock, User, Eye, EyeOff, Phone, Shield, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import { apiService } from '../../services/api';
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -11,211 +13,229 @@ interface AuthModalProps {
   redirectPath?: string;
 }
 
-const AuthModal: React.FC<AuthModalProps> = ({
-  isOpen,
-  onClose,
-  initialMode = 'login',
-  redirectPath = '/',
-}) => {
+const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, initialMode = 'login', redirectPath = '/' }) => {
+  const { setUser } = useAuth();
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
-  const [formData, setFormData] = useState<{
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  role: 'USER' | 'PROVIDER' | 'ADMIN' | ''; // '' for initial empty state
-}>({
-  name: '',
-  email: '',
-  phone: '',
-  password: '',
-  role: '',
-});
-
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', password: '', confirmPassword: '', role: 'USER' });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState<'signup' | 'otp'>('signup');
+  const [otp, setOtp] = useState('');
+  const [adminExists, setAdminExists] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const navigate = useNavigate()
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (resendCooldown > 0) {
+      timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+    }
+    return () => clearTimeout(timer);
+  }, [resendCooldown]);
 
-  const { login, signup } = useAuth();
-  const navigate = useNavigate();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-
-    try {
-      let success = false;
-      if (mode === 'login') {
-        success = await apiService.signin(formData.email, formData.password);
-      } else {
-        success = await apiService.signup(
-          formData.name,
-          formData.email,
-          formData.phone,
-          formData.role,
-          formData.password
-        );
+  const handleRoleChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const { value } = e.target;
+    setFormData(prev => ({ ...prev, role: value }));
+    if (value === 'ADMIN') {
+      try {
+        const response = await apiService.checkAdminExists();
+        setAdminExists(response.adminExists);
+        if (response.adminExists) {
+          toast.error('An admin already exists. Only one admin is allowed.');
+        }
+      } catch {
+        toast.error('Error checking admin existence');
       }
-
-      if (success) {
-        onClose();
-        setFormData({ name: '', email: '', password: '', phone: '', role: '' });
-        navigate(redirectPath);
-      } else {
-        setError(mode === 'login' ? 'Invalid credentials' : 'Signup failed');
-      }
-    } catch (err) {
-      setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+    } else {
+      setAdminExists(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const email = formData.email.toLowerCase();
+      const password = formData.password;
+
+      const response = await apiService.signin(email, password);
+
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      setUser(response.user);
+      toast.success('Login successful!');
+      navigate('/dashboard');
+      onClose();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.message || 'Login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (formData.role === 'ADMIN' && adminExists) return toast.error('Admin already exists.');
+    if (formData.password !== formData.confirmPassword) return toast.error('Passwords do not match');
+    if (formData.password.length < 6) return toast.error('Password must be at least 6 characters long');
+
+    setIsLoading(true);
+    try {
+      await apiService.generateOtp(formData.email);
+      setStep('otp');
+      setResendCooldown(60);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send OTP');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOtpVerification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const email = formData.email.toLowerCase();
+      await apiService.verifyOtp(email, otp.trim());
+      const response = await apiService.signup({
+        name: formData.name,
+        email,
+        phone: formData.phone,
+        password: formData.password,
+        role: formData.role,
+      });
+      localStorage.setItem('token', response.token);
+      localStorage.setItem('user', JSON.stringify(response.user));
+      setUser(response.user);
+      toast.success("Signup successful! Redirecting...");
+      navigate('/dashboard')
+    } catch (err: any) {
+      toast.error(err.message || 'Signup failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const resendOtp = async () => {
+    try {
+      await apiService.generateOtp(formData.email.toLowerCase());
+      setResendCooldown(60);
+      toast.success('OTP resent successfully');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to resend OTP');
+    }
   };
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md">
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-700">
-          <h2 className="text-2xl font-bold text-white">
-            {mode === 'login' ? 'Welcome Back' : 'Create Account'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-700 rounded-full transition-colors text-white"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
-            <div className="bg-gray-800 border border-gray-600 text-gray-300 px-4 py-3 rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Name */}
-          {mode === 'signup' && (
-            <div className="relative">
-              <User className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
-              <input
-                type="text"
-                name="name"
-                placeholder="Full Name"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 placeholder-gray-500"
-                required
-              />
-            </div>
-          )}
-
-          {/* Email */}
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+  if (step === 'otp') {
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center px-4">
+        <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-8 text-black relative">
+          <h2 className="text-2xl font-bold text-center mb-4">Verify Your Email</h2>
+          <p className="text-center mb-6">We sent a 6-digit code to {formData.email}</p>
+          <form onSubmit={handleOtpVerification} className="space-y-4">
             <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              value={formData.email}
-              onChange={handleInputChange}
-              className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 placeholder-gray-500"
+              type="text"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              placeholder="Enter OTP"
+              className="w-full border px-4 py-2 rounded"
               required
             />
-          </div>
+            <button
+              type="submit"
+              disabled={isLoading || otp.length !== 6}
+              className="w-full bg-green-600 text-white py-2 rounded disabled:opacity-50"
+            >
+              {isLoading ? 'Verifying...' : 'Verify & Create Account'}
+            </button>
+            <button
+              type="button"
+              onClick={resendOtp}
+              disabled={resendCooldown > 0}
+              className="text-blue-600 text-sm"
+            >
+              {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend Code'}
+            </button>
+            <button type="button" onClick={() => setStep('signup')} className="text-sm text-gray-500">
+              ← Back to Signup
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
-          {/* Phone */}
-          {mode === 'signup' && (
-            <div className="relative">
-              <Phone className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
-              <input
-                type="text"
-                name="phone"
-                placeholder="Phone Number"
-                value={formData.phone}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 placeholder-gray-500"
-                required
-              />
-            </div>
-          )}
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center px-4">
+      <div className="bg-gray-900 text-white rounded-xl shadow-xl w-full max-w-md p-8 relative">
+        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white">
+          <X className="w-5 h-5" />
+        </button>
 
-          {/* Role Dropdown */}
+        <h2 className="text-2xl font-bold text-center mb-2">{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h2>
+        <p className="text-center text-gray-400 mb-6">{mode === 'login' ? 'Sign in to your account' : 'Sign up to get started'}</p>
+
+        <form onSubmit={mode === 'signup' ? handleSignup : handleLogin} className="space-y-4">
           {mode === 'signup' && (
-            <div className="relative">
-              <Shield className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                className="w-full pl-10 pr-4 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400"
-                required
-              >
-                <option value="">Select Role</option>
+            <>
+              <input name="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" className="w-full bg-gray-700 text-white px-4 py-2 rounded" required />
+              <input name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Phone" className="w-full bg-gray-700 text-white px-4 py-2 rounded" required />
+              <select name="role" value={formData.role} onChange={handleRoleChange} className="w-full bg-gray-700 text-white px-4 py-2 rounded">
                 <option value="USER">User</option>
                 <option value="PROVIDER">Provider</option>
-                <option value="ADMIN">Admin</option>
+                <option value="ADMIN" disabled={adminExists}>Admin {adminExists ? '(Exists)' : ''}</option>
               </select>
-            </div>
+            </>
           )}
 
-          {/* Password */}
-          <div className="relative">
-            <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-500" />
+          <input type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email" className="w-full bg-gray-700 text-white px-4 py-2 rounded" required />
+
+          <input
+            type={showPassword ? 'text' : 'password'}
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            placeholder="Password"
+            className="w-full bg-gray-700 text-white px-4 py-2 rounded"
+            required
+          />
+
+          {mode === 'signup' && (
             <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              placeholder="Password"
-              value={formData.password}
+              type={showConfirmPassword ? 'text' : 'password'}
+              name="confirmPassword"
+              value={formData.confirmPassword}
               onChange={handleInputChange}
-              className="w-full pl-10 pr-12 py-3 bg-gray-700 border border-gray-600 text-white rounded-lg focus:ring-2 focus:ring-gray-400 focus:border-gray-400 placeholder-gray-500"
+              placeholder="Confirm Password"
+              className="w-full bg-gray-700 text-white px-4 py-2 rounded"
               required
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-3 text-gray-500 hover:text-gray-300"
-            >
-              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-            </button>
-          </div>
+          )}
 
-          {/* Submit Button */}
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-white text-black py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isLoading || (formData.role === 'ADMIN' && adminExists)}
+            className="w-full bg-white text-black py-2 rounded hover:bg-gray-200"
           >
-            {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
+            {isLoading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
           </button>
-
-          {/* Switch Mode */}
-          <div className="text-center">
-            <button
-              type="button"
-              onClick={() => {
-                setMode(mode === 'login' ? 'signup' : 'login');
-                setError('');
-              }}
-              className="text-gray-300 hover:text-white font-medium"
-            >
-              {mode === 'login'
-                ? "Don't have an account? Sign up"
-                : 'Already have an account? Sign in'}
-            </button>
-          </div>
         </form>
+
+        <p className="text-center text-sm mt-4">
+          {mode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
+          <button onClick={() => setMode(mode === 'login' ? 'signup' : 'login')} className="text-white underline">
+            {mode === 'login' ? 'Sign up' : 'Sign in'}
+          </button>
+        </p>
       </div>
     </div>
   );

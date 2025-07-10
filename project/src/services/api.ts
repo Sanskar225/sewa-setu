@@ -86,17 +86,11 @@ async checkUserExists(email: string) {
     return this.handleResponse(response);
   }
   
-  async signup(name: string, email: string, phone: string, role: string, password: string, userData: {
-  name: string;
-  email: string;
-  phone: string;
-  password: string;
-  role?: 'USER' | 'PROVIDER' | 'ADMIN';
-}) {
+  async signup(userdata:{name: string, email: string, phone: string, role: string | "ADMIN" | "USER" | "PROVIDER", password: string}) {
     const response = await fetch(`${API_BASE_URL}/user/signup`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
+      body: JSON.stringify(userdata),
     });
     return this.handleResponse(response);
   }
