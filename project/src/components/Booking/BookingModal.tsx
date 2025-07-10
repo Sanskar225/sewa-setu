@@ -10,6 +10,8 @@ import {
 import { ProviderProfile } from '../../types';
 import { apiService } from '../../services/api';
 import toast from 'react-hot-toast';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 interface BookingModalProps {
   provider: ProviderProfile;
@@ -119,12 +121,17 @@ export function BookingModal({ provider, onClose }: BookingModalProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Date & Time</label>
-                <input
-                  type="datetime-local"
-                  value={bookingData.dateTime}
-                  onChange={(e) =>
-                    setBookingData({ ...bookingData, dateTime: e.target.value })
+                <DatePicker
+                  selected={bookingData.dateTime ? new Date(bookingData.dateTime) : null}
+                  onChange={(date) =>
+                    setBookingData({ ...bookingData, dateTime: date?.toISOString() || '' })
                   }
+                  showTimeSelect
+                  timeFormat="HH:mm"
+                  timeIntervals={30}
+                  dateFormat="MMMM d, yyyy h:mm aa"
+                  minDate={new Date()}
+                  placeholderText="Select date and time"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg"
                 />
               </div>

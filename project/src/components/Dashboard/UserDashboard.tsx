@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import CountUp from 'react-countup';
 import { Calendar, MapPin, Star, Clock } from 'lucide-react';
 import { apiService } from '../../services/api';
@@ -7,6 +8,7 @@ import { Booking } from '../../types';
 export function UserDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchBookings = async () => {
@@ -103,7 +105,8 @@ export function UserDashboard() {
             {recentBookings.map(booking => (
               <div
                 key={booking.id}
-                className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300"
+                onClick={() => navigate('/dashboard/bookings')}
+                className="cursor-pointer flex items-center justify-between p-4 bg-white border border-gray-200 rounded-xl shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-300"
               >
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-700 font-semibold shadow-sm">

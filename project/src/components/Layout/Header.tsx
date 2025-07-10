@@ -31,7 +31,7 @@ export function Header({ onMenuToggle }: HeaderProps) {
           onClick={() => {
             navigate("/notification");
           }}
-          className="p-2 rounded-lg hover:bg-gray-800 transition-colors relative text-white"
+          className="p-2 rounded-lg hover:bg-white transition-colors relative text-white"
         >
           <Bell className="w-5 h-5 text-white" />
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>

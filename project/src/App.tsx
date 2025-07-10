@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Toaster } from 'react-hot-toast'; // 👈 import Toaster
 import { AuthProvider } from './contexts/AuthContext';
 
 import DashboardLayout from './components/Layout/DashboardLayout';
@@ -24,7 +25,6 @@ import { LoginForm } from './components/Auth/LoginForm';
 import { TestChat } from './components/Messages/TestChat';
 import SignupForm from './components/Auth/SignupForm';
 
-
 function HomePage() {
   return (
     <div className="min-h-screen bg-gray-900">
@@ -44,15 +44,17 @@ function App() {
   return (
     <AuthProvider>
       <Router>
+        {/* 🔥 Global Toaster component */}
+        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+        
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginForm />} />
-          <Route path="/signup" element={<SignupForm/>}/>
+          <Route path="/signup" element={<SignupForm />} />
           <Route path="/profile" element={<ProfilePage />} />
-          
+
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<UserDashboard />} />
-            {/* <Route path="/dashboard/jobs" element={<JobsDashboard />} /> */}
             <Route path="services" element={<ServiceSearch />} />
             <Route path="bookings" element={<BookingsList />} />
             <Route path="payments" element={<PaymentDashboard />} />

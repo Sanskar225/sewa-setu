@@ -1,5 +1,5 @@
 import React from 'react';
-import { 
+import {
   Home, Search, Calendar, CreditCard, Star, Settings, Users,
   MapPin, MessageSquare, Instagram, Linkedin, Facebook, Twitter
 } from 'lucide-react';
@@ -51,8 +51,17 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
   };
 
   return (
-    <div className={`bg-black border-r h-screen fixed lg:relative z-40 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} w-64 flex flex-col justify-between`}>
-      <div>
+    <div
+      className={`
+        bg-black fixed top-0 left-0 w-64 z-40
+        h-screen flex flex-col justify-between border-r
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}
+    >
+      {/* Scrollable content */}
+      <div className="flex-grow overflow-y-auto">
+        {/* Logo */}
         <div className="p-6">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
@@ -65,6 +74,7 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
           </div>
         </div>
 
+        {/* Menu */}
         <nav className="mt-6">
           {getMenuItems().map(item => (
             <button
@@ -79,7 +89,7 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
         </nav>
       </div>
 
-      {/* Social Media Icons */}
+      {/* Social icons pinned at the bottom */}
       <div className="flex items-center justify-center space-x-4 p-4">
         <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-pink-500">
           <Instagram size={20} />

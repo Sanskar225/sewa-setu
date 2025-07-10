@@ -11,7 +11,7 @@ export default function DashboardLayout() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin h-12 w-12 rounded-full border-b-2 border-black mx-auto mb-4" />
           <p className="text-gray-600">Loading...</p>
@@ -21,11 +21,14 @@ export default function DashboardLayout() {
   }
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-white">
       <Sidebar isOpen={sidebarOpen} onNavigate={navigate} />
+
       <div className="flex-1 flex flex-col">
         <Header onMenuToggle={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 overflow-auto p-4">
+
+        {/* 👇 FIXED: left margin for sidebar to avoid text overlap */}
+        <main className="flex-1 overflow-auto p-4 lg:ml-64">
           <Outlet />
         </main>
       </div>

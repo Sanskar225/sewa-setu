@@ -11,25 +11,31 @@ interface Message {
   createdAt: string;
 }
 
-interface MessagesDashboardProps {
-  receiverId: string;       // ID of the provider or user you are chatting with
-  chatActive: boolean;      // ✅ whether chat should be shown
-}
-
-export function MessagesDashboard({ receiverId, chatActive }: MessagesDashboardProps) {
+export function MessagesDashboard() {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const [receiverType, setReceiverType] = useState<'ADMIN' | 'PROVIDER'>('ADMIN');
+  const [receiverId, setReceiverId] = useState('');
+
+  const predefinedAdminId = 'admin-123'; // Replace with actual admin ID from backend or context
+  const predefinedProviderId = 'provider-456'; // Replace with actual provider ID
+
+  // Update receiverId when type changes
+  useEffect(() => {
+    setMessages([]);
+    setReceiverId(receiverType === 'ADMIN' ? predefinedAdminId : predefinedProviderId);
+  }, [receiverType]);
 
   useEffect(() => {
-    if (!chatActive) return;
-
+    if (!receiverId) return;
     fetchMessages();
-  }, [chatActive]);
+  }, [receiverId]);
 
   const fetchMessages = async () => {
+    setLoading(true);
     try {
       const response = await apiService.request(`/messages/${receiverId}`);
       setMessages(response.messages || []);
@@ -62,24 +68,37 @@ export function MessagesDashboard({ receiverId, chatActive }: MessagesDashboardP
     }
   };
 
-  if (!chatActive) {
-    return (
-      <div className="text-center text-gray-500 py-10">
-        <MessageSquare className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-        <p>Chat is disabled because the booking is completed or cancelled.</p>
-      </div>
-    );
-  }
-
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold mb-2">Messages</h1>
-        <p className="text-gray-600">Chat with your service provider/user</p>
+        <p className="text-gray-600 mb-4">Chat with Admin or Service Provider</p>
+
+        {/* 👇 Receiver Type Toggle */}
+        <div className="flex items-center gap-4">
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              value="ADMIN"
+              checked={receiverType === 'ADMIN'}
+              onChange={() => setReceiverType('ADMIN')}
+            />
+            Message Admin
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <input
+              type="radio"
+              value="PROVIDER"
+              checked={receiverType === 'PROVIDER'}
+              onChange={() => setReceiverType('PROVIDER')}
+            />
+            Message Provider
+          </label>
+        </div>
       </div>
 
       {/* Chat Box */}
-      <div className="bg-white rounded-xl border border-gray-200 p-4 max-h-[70vh] overflow-y-auto space-y-4 mb-6">
+      <div className="bg-white rounded-xl border border-gray-200 p-4 max-h-[60vh] overflow-y-auto space-y-4 mb-6">
         {loading ? (
           <div className="flex justify-center items-center py-10">
             <Loader2 className="animate-spin w-6 h-6 text-gray-500" />
@@ -93,9 +112,7 @@ export function MessagesDashboard({ receiverId, chatActive }: MessagesDashboardP
           messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex ${
-                msg.senderId === user?.id ? 'justify-end' : 'justify-start'
-              }`}
+              className={`flex ${msg.senderId === user?.id ? 'justify-end' : 'justify-start'}`}
             >
               <div
                 className={`px-4 py-2 rounded-lg max-w-xs ${
