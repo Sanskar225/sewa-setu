@@ -41,10 +41,10 @@ const Testimonials: React.FC = () => {
     <section className="py-20 bg-gradient-to-br from-white via-gray-100 to-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-black mb-4">
             What Our Customers Say
           </h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto">
+          <p className="text-xl text-black max-w-3xl mx-auto">
             Don't just take our word for it. Here's what our satisfied customers have to say
           </p>
         </div>
@@ -53,7 +53,7 @@ const Testimonials: React.FC = () => {
           {testimonials.map((testimonial) => (
             <div
               key={testimonial.id}
-              className="bg-gray-100 rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300"
+              className="bg-white rounded-2xl p-6 hover:shadow-lg transition-shadow duration-300"
             >
               <div className="flex items-center mb-4">
                 <img

@@ -150,3 +150,40 @@ export interface Coupon {
   expiryDate: string;
   isActive: boolean;
 }
+
+//jobs
+// types.ts
+export interface Job {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  budget: number;
+  serviceType: "AC" | "Plumbing" | "Electric";
+  createdAt: string;
+  userRating?: number; // Optional if users are rated
+}
+
+export interface Bid {
+  jobId: string;
+  providerId: string;
+  amount: number;
+  message: string;
+}
+//earning
+// Add these to your existing types.ts
+export interface Transaction {
+  id: string;
+  jobId: string;
+  amount: number;
+  date: string;
+  status: "Completed" | "Pending" | "Failed";
+  jobTitle: string;
+}
+
+export interface EarningsSummary {
+  totalEarnings: number;
+  completedJobs: number;
+  pendingBalance: number;
+  lastWithdrawalDate?: string;
+}

@@ -1,50 +1,86 @@
 import React, { useEffect, useState } from 'react';
 import { Search, MapPin, Star, Shield, Clock } from 'lucide-react';
-import { ClimbingBoxLoader } from 'react-spinners';
 
 const Hero: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [location, setLocation] = useState('');
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [showText, setShowText] = useState(true);
 
+  // Loader timeout
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000); // 2s loader
+    const timer = setTimeout(() => setLoading(false), 2500);
     return () => clearTimeout(timer);
   }, []);
+
+  // Enable follow mode on scroll
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!isFollowing) {
+        setIsFollowing(true);
+
+        // Hide the text after 5 seconds
+        setTimeout(() => {
+          setShowText(false);
+        }, 5000);
+      }
+    };
+    window.addEventListener('scroll', handleScroll, { once: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [isFollowing]);
+
+  // Mouse movement tracking
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isFollowing) {
+        setMousePos({ x: e.clientX, y: e.clientY });
+      }
+    };
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [isFollowing]);
 
   const handleSearch = () => {
     console.log('Searching for:', searchQuery, 'in', location);
   };
 
+  // Loader screen
   if (loading) {
     return (
-      <div  className="fixed inset-0 z-50 bg-white flex items-center justify-center">
-        <ClimbingBoxLoader color="#485b91" size={22} speedMultiplier={1.1} />
+      <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center space-y-4">
+        <img
+          src="/assets/plumber-loader.png"
+          alt="Loading..."
+          className="w-36 h-36 object-contain animate-loader"
+        />
+        <h1 className="text-[#4FAF1B] text-3xl font-bold tracking-wider animate-fadeUp">Parichay</h1>
       </div>
     );
   }
 
   return (
-    <div  id="Home"className="relative bg-gradient-to-br from-white via-gray-100 to-gray-200 min-h-screen flex items-center">
-      {/* Background Pattern */}
+    <div id="Home" className="relative bg-black min-h-screen flex items-center overflow-hidden">
+      {/* Background */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23000000%22 fill-opacity=%220.02%22%3E%3Ccircle cx=%2230%22 cy=%2230%22 r=%222%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')] opacity-20"></div>
-      
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative z-10">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
-          {/* Left Content */}
+          {/* Left */}
           <div className="space-y-8">
             <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 leading-tight">
+              <h1 className="text-white text-4xl md:text-5xl lg:text-6xl font-bold leading-tight">
                 Home Services,
-                <span className="text-gray-700 block">On Demand</span>
+                <span className="text-white block">On Demand</span>
               </h1>
-              <p className="text-xl text-gray-700 max-w-md">
-                Book trusted professionals for home cleaning, repairs, beauty, and more. 
+              <p className="text-xl text-white max-w-md">
+                Book trusted professionals for home cleaning, repairs, beauty, and more.
                 Quality service at your doorstep.
               </p>
             </div>
 
-            {/* Search Bar */}
+            {/* Search */}
             <div className="bg-white rounded-2xl shadow-lg p-6 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="relative">
@@ -79,25 +115,25 @@ const Hero: React.FC = () => {
             {/* Stats */}
             <div className="grid grid-cols-3 gap-8">
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">50K+</div>
-                <div className="text-sm text-gray-600">Happy Customers</div>
+                <div className="text-2xl font-bold text-white">50K+</div>
+                <div className="text-sm text-white">Happy Customers</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">1000+</div>
-                <div className="text-sm text-gray-600">Service Providers</div>
+                <div className="text-2xl font-bold text-white">1000+</div>
+                <div className="text-sm text-white">Service Providers</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-gray-900">25+</div>
-                <div className="text-sm text-gray-600">Cities</div>
+                <div className="text-2xl font-bold text-white">25+</div>
+                <div className="text-sm text-white">Cities</div>
               </div>
             </div>
           </div>
 
-          {/* Right Content - Hero Image */}
+          {/* Right */}
           <div className="relative">
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-              <img 
-                src="https://images.pexels.com/photos/4099238/pexels-photo-4099238.jpeg?auto=compress&cs=tinysrgb&w=800" 
+              <img
+                src="https://images.pexels.com/photos/4099238/pexels-photo-4099238.jpeg?auto=compress&cs=tinysrgb&w=800"
                 alt="Professional service provider"
                 className="w-full h-96 object-cover"
               />
@@ -137,6 +173,41 @@ const Hero: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Floating Follower */}
+      {isFollowing ? (
+        <>
+          <img
+            src="/assets/plumber-loader.png"
+            alt="Floating Icon"
+            className="fixed w-16 h-16 z-50 pointer-events-none transition-all duration-150 ease-out"
+            style={{
+              left: mousePos.x + 10,
+              top: mousePos.y + 10,
+            }}
+          />
+          {showText && (
+            <p
+              className="fixed z-50 text-xs bg-white text-gray-700 px-3 py-1 rounded shadow pointer-events-none"
+              style={{
+                left: mousePos.x + 70,
+                top: mousePos.y + 10,
+              }}
+            >
+              Let me follow you 👀 and help you find the best services!
+            </p>
+          )}
+        </>
+      ) : (
+        <div className="fixed bottom-6 left-6 z-50 flex flex-col items-center">
+          <img
+            src="/assets/plumber-loader.png"
+            alt="Idle Icon"
+            className="w-14 h-14 animate-bounce"
+          />
+          <p className="text-xs text-white mt-1">Hi 👋</p>
+        </div>
+      )}
     </div>
   );
 };

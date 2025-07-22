@@ -38,13 +38,13 @@ const Testimonials: React.FC = () => {
   ];
 
   return (
-    <section  className="py-20 bg-white">
+    <section  className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             What Our Customers Say
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-white max-w-3xl mx-auto">
             Don't just take our word for it. Here's what our satisfied customers have to say
           </p>
         </div>
@@ -62,19 +62,19 @@ const Testimonials: React.FC = () => {
                   className="w-12 h-12 rounded-full object-cover mr-4 grayscale"
                 />
                 <div>
-                  <h4 className="font-semibold text-gray-900">{testimonial.name}</h4>
-                  <p className="text-sm text-gray-600">{testimonial.role}</p>
+                  <h4 className="font-semibold text-black">{testimonial.name}</h4>
+                  <p className="text-sm text-black">{testimonial.role}</p>
                 </div>
               </div>
 
               <div className="flex items-center mb-4">
                 {[...Array(testimonial.rating)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-gray-800 text-gray-800" />
+                  <Star key={i} className="w-4 h-4 fill-gray-800 text-black" />
                 ))}
               </div>
 
-              <Quote className="w-6 h-6 text-gray-600 mb-2" />
-              <p className="text-gray-700 text-sm leading-relaxed">
+              <Quote className="w-6 h-6 text-black mb-2" />
+              <p className="text-black text-sm leading-relaxed">
                 {testimonial.comment}
               </p>
             </div>
@@ -83,9 +83,9 @@ const Testimonials: React.FC = () => {
 
         <div className="text-center mt-16">
           <div className="inline-flex items-center space-x-2 bg-gray-200 px-6 py-3 rounded-full">
-            <Star className="w-5 h-5 fill-gray-800 text-gray-800" />
-            <span className="text-gray-800 font-medium">4.8 out of 5 stars</span>
-            <span className="text-gray-600">from 10,000+ reviews</span>
+            <Star className="w-5 h-5 fill-gray-800 text-black" />
+            <span className="text-black font-medium">4.8 out of 5 stars</span>
+            <span className="text-black">from 10,000+ reviews</span>
           </div>
         </div>
       </div>

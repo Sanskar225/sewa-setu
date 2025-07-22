@@ -36,16 +36,16 @@ const ServiceCategories: React.FC = () => {
   ];
 
   return (
-    <section id="services" className="py-20 bg-gray-100">
+    <section id="services" className="py-20 bg-black">
       <div className="max-w-7xl mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-8">Popular Services</h2>
+        <h2 className="text-white text-3xl font-bold text-center mb-8">Popular Services</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
           {categories.map((category) => (
             <div key={category.id} className="bg-white shadow rounded-lg overflow-hidden">
               <img src={category.image} alt={category.name} className="w-full h-40 object-cover" />
               <div className="p-4">
                 <h3 className="text-lg font-semibold">{category.name}</h3>
-                <p className="text-sm text-gray-600 mb-2">{category.description}</p>
+                <p className="text-sm text-black mb-2">{category.description}</p>
                 <button
                   onClick={() => handleBookNow(category.name)}
                   className="text-blue-600 hover:underline"

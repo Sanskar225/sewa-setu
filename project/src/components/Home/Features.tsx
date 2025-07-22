@@ -66,13 +66,13 @@ const Features: React.FC = () => {
   ];
 
   return (
-    <section className="py-20 bg-gradient-to-br from-white via-gray-100 to-gray-200">
+    <section className="py-20 bg-black from-white via-gray-100 to-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
             Why Choose SewaSetu?
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="text-xl text-white max-w-3xl mx-auto">
             Experience the best-in-class features that make us the preferred choice for home services
           </p>
         </div>
@@ -105,7 +105,7 @@ const Features: React.FC = () => {
           </p>
           <button
             onClick={handleBookClick}
-            className="bg-white text-black px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+            className="bg-[#245C37] text-black px-8 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium"
           >
             Book Your First Service
           </button>

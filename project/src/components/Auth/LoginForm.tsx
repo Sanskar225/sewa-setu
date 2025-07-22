@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom'; // ✅ Add this
+import { useNavigate } from 'react-router-dom'; 
 import { Eye, EyeOff, LogIn } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 export function LoginForm() {
   const { login } = useAuth();
-  const navigate = useNavigate(); // ✅ Hook to redirect
+  const navigate = useNavigate(); 
 
   const [formData, setFormData] = useState({
     email: '',
@@ -24,7 +24,7 @@ export function LoginForm() {
     try {
       const success = await login(formData.email, formData.password);
       if (success) {
-        navigate('/dashboard'); // ✅ Redirect to dashboard
+        navigate('/dashboard'); 
       } else {
         setError('Invalid credentials. Please try again.');
       }
