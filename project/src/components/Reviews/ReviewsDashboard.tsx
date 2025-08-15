@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, User, Image as ImageIcon } from 'lucide-react';
+import { Star, User, Image as ImageIcon, ClipboardCopy, CalendarDays } from 'lucide-react';
 import { apiService } from '../../services/api';
 
 interface Review {
@@ -14,7 +14,8 @@ interface Review {
 export function ReviewsDashboard() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [visibleImages, setVisibleImages] = useState<Record<string, boolean>>({}); // 👈 Track visibility by review ID
+  const [visibleImages, setVisibleImages] = useState<Record<string, boolean>>({});
+  const [sortNewest, setSortNewest] = useState(true);
 
   useEffect(() => {
     fetchReviews();
@@ -67,69 +68,100 @@ export function ReviewsDashboard() {
     }));
   };
 
+  const sortedReviews = [...reviews].sort((a, b) =>
+    sortNewest
+      ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+  );
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-2">My Reviews</h1>
-      <p className="text-gray-600 mb-6">Here’s what others say about your services</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-3">
+        <div>
+          <h1 className="text-3xl font-bold">⭐ My Reviews</h1>
+          <p className="text-gray-600">Here’s what others say about your services</p>
+        </div>
+        <button
+          onClick={() => setSortNewest(!sortNewest)}
+          className="px-3 py-1.5 border rounded-lg text-sm bg-white hover:bg-gray-50 transition"
+        >
+          {sortNewest ? 'Sort: Newest First' : 'Sort: Oldest First'}
+        </button>
+      </div>
 
-      <div className="space-y-4">
+      <div className="space-y-5">
         {loading ? (
           [...Array(3)].map((_, i) => (
-            <div key={i} className="animate-pulse bg-gray-200 h-24 rounded-lg"></div>
+            <div
+              key={i}
+              className="animate-pulse bg-gray-100 rounded-xl h-28 shadow-sm"
+            ></div>
           ))
-        ) : reviews.length > 0 ? (
-          reviews.map((review) => (
+        ) : sortedReviews.length > 0 ? (
+          sortedReviews.map((review) => (
             <div
               key={review.id}
-              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition duration-200"
+              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition"
             >
-              <div className="flex items-center space-x-3 mb-2">
-                <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-gray-600" />
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
+                    <User className="w-5 h-5 text-gray-500" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-gray-800">{review.reviewer?.name}</p>
+                    <div className="text-xs text-gray-500 flex items-center gap-1">
+                      <CalendarDays className="w-4 h-4" />
+                      {new Date(review.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-medium text-gray-800">{review.reviewer?.name || 'Anonymous'}</p>
-                  <p className="text-xs text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</p>
+
+                <div className="flex gap-1">
+                  {[...Array(5)].map((_, i) => (
+                    <Star
+                      key={i}
+                      className={`w-5 h-5 transition ${
+                        i < review.rating ? 'text-yellow-400' : 'text-gray-300'
+                      }`}
+                      fill={i < review.rating ? 'currentColor' : 'none'}
+                    />
+                  ))}
                 </div>
               </div>
 
-              {/* Stars */}
-              <div className="flex items-center mb-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    className={`w-5 h-5 ${i < review.rating ? 'text-yellow-400' : 'text-gray-300'}`}
-                    fill={i < review.rating ? 'currentColor' : 'none'}
-                  />
-                ))}
+              <div className="flex justify-between items-start">
+                <p className="text-gray-700 text-sm max-w-lg">{review.comment}</p>
+                <button
+                  onClick={() => navigator.clipboard.writeText(review.comment)}
+                  title="Copy comment"
+                  className="text-gray-400 hover:text-black ml-3"
+                >
+                  <ClipboardCopy className="w-4 h-4" />
+                </button>
               </div>
 
-              {/* Comment */}
-              <p className="text-gray-700 mb-2">{review.comment}</p>
-
-              {/* Images Toggle */}
               {review.images && review.images.length > 0 ? (
                 <>
                   <button
-                    className="text-sm text-blue-600 underline hover:text-blue-800"
                     onClick={() => toggleImageView(review.id)}
+                    className="mt-3 text-sm text-blue-600 underline hover:text-blue-800"
                   >
                     {visibleImages[review.id] ? 'Hide Images' : 'See Images'}
                   </button>
 
-                  {/* Scrollable Image View */}
                   {visibleImages[review.id] && (
-                    <div className="mt-3 flex space-x-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                      {review.images.map((imgUrl, idx) => (
+                    <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
+                      {review.images.map((img, idx) => (
                         <a
-                          href={imgUrl}
                           key={idx}
+                          href={img}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="w-24 h-24 min-w-[96px] rounded-lg overflow-hidden border border-gray-200 hover:shadow"
+                          className="w-24 h-24 min-w-[96px] rounded-lg overflow-hidden border border-gray-300 hover:shadow-md transition"
                         >
                           <img
-                            src={imgUrl}
+                            src={img}
                             alt={`review-${review.id}-img-${idx}`}
                             className="w-full h-full object-cover"
                           />
@@ -139,16 +171,17 @@ export function ReviewsDashboard() {
                   )}
                 </>
               ) : (
-                <p className="text-xs text-gray-400 flex items-center">
-                  <ImageIcon className="w-4 h-4 mr-1" /> No images uploaded.
-                </p>
+                <div className="flex items-center text-xs text-gray-400 mt-2">
+                  <ImageIcon className="w-4 h-4 mr-1" /> No images uploaded
+                </div>
               )}
             </div>
           ))
         ) : (
-          <div className="text-center text-gray-500 py-8">
-            <Star className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-            No reviews found
+          <div className="text-center py-12 text-gray-500">
+            <Star className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+            <p className="text-lg font-medium">No reviews yet</p>
+            <p className="text-sm">You haven't received any feedback on your services.</p>
           </div>
         )}
       </div>

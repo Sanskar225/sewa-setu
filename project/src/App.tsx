@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './contexts/AuthContext';
+import { MouseFollowerProvider } from './contexts/MouseFollowerContext';
+import ViewCalendar from "./components/Calendar/ViewCalendar";
 
 import DashboardLayout from './components/Layout/DashboardLayout';
 import { UserDashboard } from './components/Dashboard/UserDashboard';
@@ -26,6 +28,7 @@ import { TestChat } from './components/Messages/TestChat';
 import SignupForm from './components/Auth/SignupForm';
 import JobsPage from './components/ProviderPanel/jobs';
 import EarningsPage from './components/ProviderPanel/earning';
+import MouseFollower from './components/MouseFollower';
 
 function HomePage() {
   return (
@@ -45,30 +48,34 @@ function HomePage() {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<HomePage />} />
-          <Route path="/login" element={<LoginForm />} />
-          <Route path="/signup" element={<SignupForm />} />
-          <Route path="/profile" element={<ProfilePage />} />
+      <MouseFollowerProvider>
+        <Router>
+          <Toaster position="top-right" toastOptions={{ duration: 3000 }} />
+          <MouseFollower />
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<HomePage />} />
+            <Route path="/login" element={<LoginForm />} />
+            <Route path="/signup" element={<SignupForm />} />
+            <Route path="/profile" element={<ProfilePage />} />
+<Route path="/calendar" element={<ViewCalendar />} />
 
-          {/* Dashboard and nested routes */}
-          <Route path="/dashboard" element={<DashboardLayout />}>
-            <Route index element={<UserDashboard />} />
-            <Route path="services" element={<ServiceSearch />} />
-            <Route path="bookings" element={<BookingsList />} />
-            <Route path="payments" element={<PaymentDashboard />} />
-            <Route path="messages" element={<MessagesDashboard receiverId={''} chatActive={false} />} />
-            <Route path="reviews" element={<ReviewsDashboard />} />
-            <Route path="settings" element={<SettingsDashboard />} />
-            <Route path="test-chat" element={<TestChat />} />
-            <Route path="jobs" element={<JobsPage />} />
-            <Route path="earnings" element={<EarningsPage />} />
-          </Route>
-        </Routes>
-      </Router>
+            {/* Dashboard and nested routes */}
+            <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<UserDashboard />} />
+              <Route path="services" element={<ServiceSearch />} />
+              <Route path="bookings" element={<BookingsList />} />
+              <Route path="payments" element={<PaymentDashboard />} />
+              <Route path="messages" element={<MessagesDashboard receiverId={''} chatActive={false} />} />
+              <Route path="reviews" element={<ReviewsDashboard />} />
+              <Route path="settings" element={<SettingsDashboard />} />
+              <Route path="test-chat" element={<TestChat />} />
+              <Route path="jobs" element={<JobsPage />} />
+              <Route path="earnings" element={<EarningsPage />} />
+            </Route>
+          </Routes>
+        </Router>
+      </MouseFollowerProvider>
     </AuthProvider>
   );
 }

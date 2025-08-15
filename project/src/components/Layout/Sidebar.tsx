@@ -24,7 +24,7 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
   ];
 
   const providerMenuItems = [
-    { path: '/dashboard', icon: Home, label: 'Dashboard' },
+    { path: '/providerdashboard', icon: Home, label: 'Dashboard' },
     { path: '/dashboard/jobs', icon: Calendar, label: 'My Jobs' },
     { path: '/dashboard/location', icon: MapPin, label: 'Location' },
     { path: '/dashboard/earnings', icon: CreditCard, label: 'Earnings' },
