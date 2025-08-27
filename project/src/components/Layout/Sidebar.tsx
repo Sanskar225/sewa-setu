@@ -49,7 +49,7 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
       default: return userMenuItems;
     }
   };
-
+  
   return (
     <div
       className={`
