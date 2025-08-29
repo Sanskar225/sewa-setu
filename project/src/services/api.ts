@@ -15,9 +15,9 @@ class APIService {
   }
 
   private async handleResponse(response: Response) {
-    if (response.status === 403) {
+    if (response.status === 403 || response.status === 401) {
       forceLogoutFn();
-      return;
+      throw new Error('Authentication failed');
     }
 
     let data;
@@ -132,6 +132,7 @@ class APIService {
 
   // Booking APIs
   async createBooking(data: {
+    userId: string;
     providerId: string;
     category: string;
     dateTime: string;

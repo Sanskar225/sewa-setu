@@ -5,13 +5,13 @@ import React, {
   useEffect,
   ReactNode,
 } from 'react';
-import { apiService } from '../services/api'; // Adjust path if needed
-import { User } from '../types'; // Make sure your User type is correctly defined
+import { apiService, setForceLogout } from '../services/api';
+import { User } from '../types';
+import toast from 'react-hot-toast';
 
-// Updated interface to include setUser
 interface AuthContextType {
   user: User | null;
-  setUser: (user: User | null) => void; // ✅ Included setUser
+  setUser: (user: User | null) => void;
   login: (email: string, password: string) => Promise<boolean>;
   signup: (
     name: string,
@@ -22,11 +22,11 @@ interface AuthContextType {
   ) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Custom hook
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -43,6 +43,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Setup force logout
+  useEffect(() => {
+    setForceLogout(() => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
+      toast.error('Session expired. Please login again.');
+    });
+  }, []);
+
   // Load user from localStorage on mount
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -52,6 +62,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       try {
         const parsed = JSON.parse(storedUser);
         setUser(parsed);
+        // Verify token is still valid
+        apiService.getCurrentUser().catch(() => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        });
       } catch (err) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
@@ -60,7 +76,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(false);
   }, []);
 
-  // 🔐 Login
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       const res = await apiService.signin(email, password);
@@ -70,13 +85,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(res.user);
         return true;
       }
-    } catch (err) {
-      console.error('Login failed:', err);
+    } catch (err: any) {
+      toast.error(err.message || 'Login failed');
     }
     return false;
   };
 
-  // 🧾 Signup
   const signup = async (
     name: string,
     email: string,
@@ -92,22 +106,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(res.user);
         return true;
       }
-    } catch (err) {
-      console.error('Signup failed:', err);
+    } catch (err: any) {
+      toast.error(err.message || 'Signup failed');
     }
     return false;
   };
 
-  // 🔓 Logout
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
+    toast.success('Logged out successfully');
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, setUser, login, signup, logout, loading }}
+      value={{ 
+        user, 
+        setUser, 
+        login, 
+        signup, 
+        logout, 
+        loading, 
+        isAuthenticated: !!user 
+      }}
     >
       {children}
     </AuthContext.Provider>
