@@ -1,158 +1,237 @@
-import React, { useState } from "react";
-import { Transaction, EarningsSummary } from "./types";
+import React, { useState, useEffect } from "react";
+import { DollarSign, TrendingUp, Calendar, Download } from "lucide-react";
+import { apiService } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
+import { Booking, WalletTransaction } from "../../types";
+import toast from "react-hot-toast";
 
-// Mock data
-const mockTransactions: Transaction[] = [
-  {
-    id: "1",
-    jobId: "101",
-    amount: 1200,
-    date: "2023-10-20",
-    status: "Completed",
-    jobTitle: "AC Repair in Andheri",
-  },
-  {
-    id: "2",
-    jobId: "102",
-    amount: 800,
-    date: "2023-10-18",
-    status: "Pending",
-    jobTitle: "Kitchen Pipe Leak",
-  },
-];
-
-const mockEarnings: EarningsSummary = {
-  totalEarnings: 8500,
-  completedJobs: 12,
-  pendingBalance: 1800,
-  lastWithdrawalDate: "2023-10-15",
-};
+interface EarningsSummary {
+  totalEarnings: number;
+  completedJobs: number;
+  pendingBalance: number;
+  lastWithdrawalDate?: string;
+}
 
 const EarningsPage: React.FC = () => {
-  const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
-  const [earnings] = useState<EarningsSummary>(mockEarnings);
+  const { user } = useAuth();
+  const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
+  const [earnings, setEarnings] = useState<EarningsSummary>({
+    totalEarnings: 0,
+    completedJobs: 0,
+    pendingBalance: 0,
+  });
   const [withdrawalAmount, setWithdrawalAmount] = useState<number>(0);
   const [statusFilter, setStatusFilter] = useState<string>("All");
+  const [loading, setLoading] = useState(true);
 
-  // Filter transactions by status
-  const filteredTransactions = statusFilter === "All" 
-    ? transactions 
-    : transactions.filter(t => t.status === statusFilter);
+  useEffect(() => {
+    fetchEarningsData();
+  }, []);
 
-  // Handle withdrawal request
-  const handleWithdrawal = () => {
-    if (withdrawalAmount <= 0 || withdrawalAmount > earnings.pendingBalance) {
-      alert("Invalid amount!");
-      return;
+  const fetchEarningsData = async () => {
+    try {
+      const [jobsRes, walletRes, transactionsRes] = await Promise.all([
+        apiService.getMyJobs(),
+        apiService.getWallet(),
+        apiService.getWalletTransactions()
+      ]);
+
+      const jobs = jobsRes.bookings || [];
+      const completedJobs = jobs.filter((job: Booking) => job.status === 'COMPLETED');
+      const totalEarnings = completedJobs.reduce((sum: number, job: Booking) => sum + job.price, 0);
+
+      setEarnings({
+        totalEarnings,
+        completedJobs: completedJobs.length,
+        pendingBalance: walletRes.wallet?.balance || 0,
+      });
+
+      setTransactions(transactionsRes.transactions || []);
+    } catch (error) {
+      console.error('Error fetching earnings data:', error);
+      toast.error('Failed to load earnings data');
+    } finally {
+      setLoading(false);
     }
-    alert(`Withdrawal request for ₹${withdrawalAmount} submitted!`);
-    setWithdrawalAmount(0);
   };
 
+  const handleWithdrawal = async () => {
+    if (withdrawalAmount <= 0 || withdrawalAmount > earnings.pendingBalance) {
+      toast.error("Invalid withdrawal amount!");
+      return;
+    }
+    
+    try {
+      // In a real app, you'd have a withdrawal API endpoint
+      toast.success(`Withdrawal request for ₹${withdrawalAmount} submitted!`);
+      setWithdrawalAmount(0);
+      fetchEarningsData();
+    } catch (error) {
+      toast.error('Failed to process withdrawal');
+    }
+  };
+
+  const filteredTransactions = statusFilter === "All" 
+    ? transactions 
+    : transactions.filter(t => t.type === statusFilter);
+
+  if (loading) {
+    return (
+      <div className="p-6 space-y-6 animate-pulse">
+        <div className="h-8 bg-gray-200 rounded w-64 mb-6"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="h-24 bg-gray-200 rounded-xl"></div>
+          ))}
+        </div>
+        <div className="h-64 bg-gray-200 rounded-xl"></div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 max-w-6xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">My Earnings</h1>
+    <div className="p-6 max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+          💰 My Earnings
+        </h1>
+        <p className="text-gray-600">Track your income and manage withdrawals</p>
+      </div>
 
       {/* Earnings Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <h3 className="text-gray-500">Total Earnings</h3>
-          <p className="text-2xl font-bold">₹{earnings.totalEarnings}</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-blue-500 to-purple-500 text-white p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-blue-100 text-sm font-medium">Total Earnings</h3>
+              <p className="text-3xl font-bold">₹{earnings.totalEarnings}</p>
+            </div>
+            <DollarSign className="w-8 h-8 text-blue-200" />
+          </div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <h3 className="text-gray-500">Completed Jobs</h3>
-          <p className="text-2xl font-bold">{earnings.completedJobs}</p>
+
+        <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-gray-500 text-sm font-medium">Completed Jobs</h3>
+              <p className="text-3xl font-bold text-gray-900">{earnings.completedJobs}</p>
+            </div>
+            <CheckCircle className="w-8 h-8 text-green-500" />
+          </div>
         </div>
-        <div className="bg-white p-4 rounded-lg shadow-sm border">
-          <h3 className="text-gray-500">Pending Balance</h3>
-          <p className="text-2xl font-bold">₹{earnings.pendingBalance}</p>
+
+        <div className="bg-gradient-to-br from-green-500 to-teal-500 text-white p-6 rounded-xl shadow-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-green-100 text-sm font-medium">Available Balance</h3>
+              <p className="text-3xl font-bold">₹{earnings.pendingBalance}</p>
+            </div>
+            <TrendingUp className="w-8 h-8 text-green-200" />
+          </div>
         </div>
       </div>
 
       {/* Withdrawal Section */}
-      <div className="bg-white p-4 rounded-lg shadow-sm border mb-8">
-        <h2 className="text-xl font-semibold mb-4">Withdraw Funds</h2>
+      <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 mb-8">
+        <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Download className="w-5 h-5 text-blue-500" />
+          Withdraw Funds
+        </h2>
         <div className="flex flex-col md:flex-row gap-4 items-end">
           <div className="flex-1">
-            <label className="block mb-2">Amount (₹)</label>
+            <label className="block mb-2 text-sm font-medium text-gray-700">Amount (₹)</label>
             <input
               type="number"
               value={withdrawalAmount}
               onChange={(e) => setWithdrawalAmount(Number(e.target.value))}
               max={earnings.pendingBalance}
-              className="w-full p-2 border rounded"
+              className="w-full p-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder={`Max: ₹${earnings.pendingBalance}`}
             />
           </div>
           <button
             onClick={handleWithdrawal}
-            disabled={earnings.pendingBalance === 0}
-            className={`px-4 py-2 rounded ${
-              earnings.pendingBalance === 0
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-green-500 hover:bg-green-600 text-white"
+            disabled={earnings.pendingBalance === 0 || withdrawalAmount <= 0}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+              earnings.pendingBalance === 0 || withdrawalAmount <= 0
+                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                : "bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white shadow-lg hover:shadow-xl"
             }`}
           >
             Request Withdrawal
           </button>
         </div>
         {earnings.lastWithdrawalDate && (
-          <p className="mt-2 text-sm text-gray-500">
+          <p className="mt-3 text-sm text-gray-500">
             Last withdrawal: {earnings.lastWithdrawalDate}
           </p>
         )}
       </div>
 
       {/* Transaction History */}
-      <div>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Transaction History</h2>
+      <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-lg">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-purple-500" />
+            Transaction History
+          </h2>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="p-2 border rounded"
+            className="p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
-            <option value="All">All Statuses</option>
-            <option value="Completed">Completed</option>
-            <option value="Pending">Pending</option>
-            <option value="Failed">Failed</option>
+            <option value="All">All Transactions</option>
+            <option value="CREDIT">Credits</option>
+            <option value="DEBIT">Debits</option>
           </select>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white border rounded-lg">
-            <thead>
-              <tr className="bg-gray-50">
-                <th className="p-3 text-left">Job</th>
-                <th className="p-3 text-left">Amount</th>
-                <th className="p-3 text-left">Date</th>
-                <th className="p-3 text-left">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredTransactions.map((txn) => (
-                <tr key={txn.id} className="border-t">
-                  <td className="p-3">{txn.jobTitle}</td>
-                  <td className="p-3">₹{txn.amount}</td>
-                  <td className="p-3">{txn.date}</td>
-                  <td className="p-3">
-                    <span
-                      className={`px-2 py-1 rounded-full text-xs ${
-                        txn.status === "Completed"
-                          ? "bg-green-100 text-green-800"
-                          : txn.status === "Pending"
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {txn.status}
-                    </span>
-                  </td>
+        {filteredTransactions.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="min-w-full">
+              <thead>
+                <tr className="bg-gray-50 border-b border-gray-200">
+                  <th className="p-4 text-left text-sm font-semibold text-gray-700">Type</th>
+                  <th className="p-4 text-left text-sm font-semibold text-gray-700">Amount</th>
+                  <th className="p-4 text-left text-sm font-semibold text-gray-700">Source</th>
+                  <th className="p-4 text-left text-sm font-semibold text-gray-700">Date</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {filteredTransactions.map((txn) => (
+                  <tr key={txn.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="p-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        txn.type === "CREDIT" 
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                      }`}>
+                        {txn.type}
+                      </span>
+                    </td>
+                    <td className="p-4">
+                      <span className={`font-semibold ${
+                        txn.type === "CREDIT" ? "text-green-600" : "text-red-600"
+                      }`}>
+                        {txn.type === "CREDIT" ? "+" : "-"}₹{txn.amount}
+                      </span>
+                    </td>
+                    <td className="p-4 text-gray-700">{txn.source}</td>
+                    <td className="p-4 text-gray-500 text-sm">
+                      {new Date(txn.createdAt).toLocaleDateString()}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No transactions yet</h3>
+            <p className="text-gray-600 text-sm">Your transaction history will appear here once you start earning</p>
+          </div>
+        )}
       </div>
     </div>
   );

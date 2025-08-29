@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CountUp from 'react-countup';
 import {
-  Calendar, MapPin, Star, Clock, CreditCard, PlusCircle, Trophy, Lock, TrendingUp
+  Calendar, MapPin, Star, Clock, CreditCard, PlusCircle, Trophy, Lock, TrendingUp, User
 } from 'lucide-react';
 import { apiService } from '../../services/api';
 import { Booking, Wallet } from '../../types';

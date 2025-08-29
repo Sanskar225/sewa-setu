@@ -1,71 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { Star, User, Image as ImageIcon, ClipboardCopy, CalendarDays } from 'lucide-react';
 import { apiService } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
+import toast from 'react-hot-toast';
 
 interface Review {
   id: string;
-  reviewer: { name: string };
+  user: { name: string };
   rating: number;
   comment: string;
   createdAt: string;
-  images?: string[];
 }
 
 export function ReviewsDashboard() {
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
-  const [visibleImages, setVisibleImages] = useState<Record<string, boolean>>({});
   const [sortNewest, setSortNewest] = useState(true);
 
   useEffect(() => {
-    fetchReviews();
-  }, []);
+    if (user?.role === 'PROVIDER') {
+      fetchReviews();
+    } else {
+      setLoading(false);
+    }
+  }, [user]);
 
   const fetchReviews = async () => {
     try {
-      const res = await apiService.request('/reviews/me');
-      if (res?.reviews?.length) {
-        setReviews(res.reviews);
-      } else {
-        throw new Error('Empty reviews');
+      if (user?.id) {
+        const res = await apiService.getProviderReviews(user.id);
+        setReviews(res.reviews || []);
       }
     } catch (err) {
-      console.warn('Using dummy reviews due to error or empty response:', err);
-      setReviews([
-        {
-          id: 'r1',
-          reviewer: { name: 'Aarav Mehta' },
-          rating: 5,
-          comment: 'Excellent work! Very professional and punctual.',
-          createdAt: new Date().toISOString(),
-          images: ['https://via.placeholder.com/150', 'https://via.placeholder.com/160'],
-        },
-        {
-          id: 'r2',
-          reviewer: { name: 'Priya Sharma' },
-          rating: 4,
-          comment: 'Good service overall. Could improve punctuality.',
-          createdAt: new Date(Date.now() - 86400000).toISOString(),
-          images: [],
-        },
-        {
-          id: 'r3',
-          reviewer: { name: 'Rahul Verma' },
-          rating: 3,
-          comment: 'Average experience. The service was okay.',
-          createdAt: new Date(Date.now() - 2 * 86400000).toISOString(),
-        },
-      ]);
+      console.error('Error fetching reviews:', err);
+      toast.error('Failed to load reviews');
     } finally {
       setLoading(false);
     }
-  };
-
-  const toggleImageView = (reviewId: string) => {
-    setVisibleImages((prev) => ({
-      ...prev,
-      [reviewId]: !prev[reviewId],
-    }));
   };
 
   const sortedReviews = [...reviews].sort((a, b) =>
@@ -74,12 +46,33 @@ export function ReviewsDashboard() {
       : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
   );
 
+  const averageRating = reviews.length > 0 
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+    : '0.0';
+
+  if (user?.role !== 'PROVIDER') {
+    return (
+      <div className="p-6 max-w-4xl mx-auto text-center">
+        <Star className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Reviews</h1>
+        <p className="text-gray-600">Reviews are only available for service providers</p>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-3">
         <div>
           <h1 className="text-3xl font-bold">⭐ My Reviews</h1>
-          <p className="text-gray-600">Here’s what others say about your services</p>
+          <p className="text-gray-600">Here's what others say about your services</p>
+          <div className="flex items-center gap-4 mt-2">
+            <div className="flex items-center gap-1">
+              <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+              <span className="font-semibold text-lg">{averageRating}</span>
+              <span className="text-gray-500">({reviews.length} reviews)</span>
+            </div>
+          </div>
         </div>
         <button
           onClick={() => setSortNewest(!sortNewest)}
@@ -109,7 +102,7 @@ export function ReviewsDashboard() {
                     <User className="w-5 h-5 text-gray-500" />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800">{review.reviewer?.name}</p>
+                    <p className="font-semibold text-gray-800">{review.user?.name}</p>
                     <div className="text-xs text-gray-500 flex items-center gap-1">
                       <CalendarDays className="w-4 h-4" />
                       {new Date(review.createdAt).toLocaleDateString()}
@@ -133,48 +126,16 @@ export function ReviewsDashboard() {
               <div className="flex justify-between items-start">
                 <p className="text-gray-700 text-sm max-w-lg">{review.comment}</p>
                 <button
-                  onClick={() => navigator.clipboard.writeText(review.comment)}
+                  onClick={() => {
+                    navigator.clipboard.writeText(review.comment);
+                    toast.success('Comment copied to clipboard');
+                  }}
                   title="Copy comment"
                   className="text-gray-400 hover:text-black ml-3"
                 >
                   <ClipboardCopy className="w-4 h-4" />
                 </button>
               </div>
-
-              {review.images && review.images.length > 0 ? (
-                <>
-                  <button
-                    onClick={() => toggleImageView(review.id)}
-                    className="mt-3 text-sm text-blue-600 underline hover:text-blue-800"
-                  >
-                    {visibleImages[review.id] ? 'Hide Images' : 'See Images'}
-                  </button>
-
-                  {visibleImages[review.id] && (
-                    <div className="mt-3 flex gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-400">
-                      {review.images.map((img, idx) => (
-                        <a
-                          key={idx}
-                          href={img}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="w-24 h-24 min-w-[96px] rounded-lg overflow-hidden border border-gray-300 hover:shadow-md transition"
-                        >
-                          <img
-                            src={img}
-                            alt={`review-${review.id}-img-${idx}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </a>
-                      ))}
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="flex items-center text-xs text-gray-400 mt-2">
-                  <ImageIcon className="w-4 h-4 mr-1" /> No images uploaded
-                </div>
-              )}
             </div>
           ))
         ) : (

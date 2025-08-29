@@ -19,7 +19,6 @@ import couponRoutes from "./routes/coupon.js";
 import reviewRoutes from "./routes/reviews.js";
 import messageRoutes from "./routes/messages.js";
 import notificationRoutes from "./routes/notification.js";
-// import authRoutes from "./routes/user.js";
 import matchRoutes from "./routes/match.js";
 
 // Socket handler
@@ -50,7 +49,6 @@ app.get("/", (req, res) => {
 });
 
 // Routes
-// app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/user", userRoutes);
 app.use("/api/v1/provider-profile", providerProfileRoutes);
 app.use("/api/v1/availability", availabilityRoutes);

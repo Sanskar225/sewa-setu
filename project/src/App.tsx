@@ -13,6 +13,8 @@ import { PaymentDashboard } from './components/Payments/PaymentDashboard';
 import { MessagesDashboard } from './components/Messages/Message';
 import { ReviewsDashboard } from './components/Reviews/ReviewsDashboard';
 import { SettingsDashboard } from './components/Settings/SettingsDashboard';
+import AdminDashboard from './components/AdminPanel/AdminDashboard';
+import ProviderDashboard from './components/ProviderPanel/ProviderDashboard';
 
 import Navigation from './components/Home/Navigation';
 import Hero from './components/Home/Hero';
@@ -29,6 +31,7 @@ import SignupForm from './components/Auth/SignupForm';
 import JobsPage from './components/ProviderPanel/jobs';
 import EarningsPage from './components/ProviderPanel/earning';
 import MouseFollower from './components/MouseFollower';
+import { useAuth } from './contexts/AuthContext';
 
 function HomePage() {
   return (
@@ -45,6 +48,18 @@ function HomePage() {
   );
 }
 
+function DashboardContent() {
+  const { user } = useAuth();
+
+  if (user?.role === 'ADMIN') {
+    return <AdminDashboard />;
+  } else if (user?.role === 'PROVIDER') {
+    return <ProviderDashboard />;
+  } else {
+    return <UserDashboard />;
+  }
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -58,20 +73,24 @@ function App() {
             <Route path="/login" element={<LoginForm />} />
             <Route path="/signup" element={<SignupForm />} />
             <Route path="/profile" element={<ProfilePage />} />
-<Route path="/calendar" element={<ViewCalendar />} />
+            <Route path="/calendar" element={<ViewCalendar />} />
 
             {/* Dashboard and nested routes */}
             <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<UserDashboard />} />
+              <Route index element={<DashboardContent />} />
               <Route path="services" element={<ServiceSearch />} />
               <Route path="bookings" element={<BookingsList />} />
               <Route path="payments" element={<PaymentDashboard />} />
-              <Route path="messages" element={<MessagesDashboard receiverId={''} chatActive={false} />} />
+              <Route path="messages" element={<MessagesDashboard />} />
               <Route path="reviews" element={<ReviewsDashboard />} />
               <Route path="settings" element={<SettingsDashboard />} />
               <Route path="test-chat" element={<TestChat />} />
               <Route path="jobs" element={<JobsPage />} />
               <Route path="earnings" element={<EarningsPage />} />
+              <Route path="users" element={<AdminDashboard />} />
+              <Route path="providers" element={<AdminDashboard />} />
+              <Route path="categories" element={<AdminDashboard />} />
+              <Route path="analytics" element={<AdminDashboard />} />
             </Route>
           </Routes>
         </Router>

@@ -1,7 +1,7 @@
 import React from 'react';
 import {
   Home, Search, Calendar, CreditCard, Star, Settings, Users,
-  MapPin, MessageSquare, Instagram, Linkedin, Facebook, Twitter
+  MapPin, MessageSquare, Instagram, Linkedin, Facebook, Twitter, Briefcase, BarChart3
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -24,9 +24,8 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
   ];
 
   const providerMenuItems = [
-    { path: '/providerdashboard', icon: Home, label: 'Dashboard' },
+    { path: '/dashboard', icon: Home, label: 'Dashboard' },
     { path: '/dashboard/jobs', icon: Calendar, label: 'My Jobs' },
-    { path: '/dashboard/location', icon: MapPin, label: 'Location' },
     { path: '/dashboard/earnings', icon: CreditCard, label: 'Earnings' },
     { path: '/dashboard/reviews', icon: Star, label: 'Reviews' },
     { path: '/dashboard/messages', icon: MessageSquare, label: 'Messages' },
@@ -39,6 +38,7 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
     { path: '/dashboard/providers', icon: Users, label: 'Providers' },
     { path: '/dashboard/categories', icon: Search, label: 'Categories' },
     { path: '/dashboard/bookings', icon: Calendar, label: 'All Bookings' },
+    { path: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
     { path: '/dashboard/settings', icon: Settings, label: 'Settings' },
   ];
 
@@ -69,7 +69,11 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
             </div>
             <div>
               <div className="font-semibold text-white">सेवासेतु</div>
-              <div className="text-xs text-white">Professional Services</div>
+              <div className="text-xs text-gray-400">
+                {user?.role === 'ADMIN' ? 'Admin Panel' : 
+                 user?.role === 'PROVIDER' ? 'Provider Panel' : 
+                 'Professional Services'}
+              </div>
             </div>
           </div>
         </div>
@@ -80,7 +84,7 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
             <button
               key={item.path}
               onClick={() => onNavigate(item.path)}
-              className="w-full flex items-center space-x-3 px-6 py-3 text-left text-white hover:text-lg transition-all duration-200"
+              className="w-full flex items-center space-x-3 px-6 py-3 text-left text-white hover:bg-gray-800 hover:text-white transition-all duration-200"
             >
               <item.icon className="w-5 h-5" />
               <span>{item.label}</span>
@@ -90,17 +94,17 @@ export function Sidebar({ isOpen, onNavigate }: SidebarProps) {
       </div>
 
       {/* Social icons pinned at the bottom */}
-      <div className="flex items-center justify-center space-x-4 p-4">
-        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-pink-500">
+      <div className="flex items-center justify-center space-x-4 p-4 border-t border-gray-800">
+        <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-pink-500 transition-colors">
           <Instagram size={20} />
         </a>
-        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-500">
+        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-500 transition-colors">
           <Linkedin size={20} />
         </a>
-        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-700">
+        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-700 transition-colors">
           <Facebook size={20} />
         </a>
-        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-white hover:text-blue-400">
+        <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-blue-400 transition-colors">
           <Twitter size={20} />
         </a>
       </div>

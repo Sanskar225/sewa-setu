@@ -90,12 +90,11 @@ export function ServiceSearch() {
   const sortedProviders = [...filteredProviders].sort((a, b) => {
     switch (sortBy) {
       case 'rating':
-        return 5 - 4.8; // Mock rating sort
+        return 0; // Mock rating sort since we don't have ratings yet
       case 'price':
         return a.rate - b.rate;
       case 'distance':
-        // Mock distance sort
-        return 0;
+        return 0; // Mock distance sort
       default:
         return 0;
     }
@@ -244,7 +243,9 @@ export function ServiceSearch() {
                         </div>
                         <div className="flex items-center space-x-2 text-sm text-gray-600">
                           <Clock className="w-4 h-4 text-gray-400" />
-                          <span className="text-green-600 font-medium">Available now</span>
+                          <span className={`font-medium ${provider.availability ? 'text-green-600' : 'text-red-600'}`}>
+                            {provider.availability ? 'Available now' : 'Not available'}
+                          </span>
                         </div>
                       </div>
 
@@ -273,7 +274,8 @@ export function ServiceSearch() {
                         <div className="text-xl font-bold text-gray-900">₹{provider.rate}/hour</div>
                         <button
                           onClick={() => setSelectedProvider(provider)}
-                          className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-300 font-medium group-hover:scale-105"
+                          disabled={!provider.availability}
+                          className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium group-hover:scale-105"
                         >
                           <span>Book Now</span>
                           <ChevronRight className="w-4 h-4" />

@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { ProviderProfile } from '../../types';
 import { apiService } from '../../services/api';
+import { useAuth } from '../../contexts/AuthContext';
 import toast from 'react-hot-toast';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -16,10 +17,11 @@ interface BookingModalProps {
 }
 
 export function BookingModal({ provider, onClose }: BookingModalProps) {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [bookingData, setBookingData] = useState({
     category: '',
-    dateTime: '',
+    dateTime: new Date(),
     location: '',
     notes: '',
     duration: 1,
@@ -28,12 +30,18 @@ export function BookingModal({ provider, onClose }: BookingModalProps) {
   const [loading, setLoading] = useState(false);
 
   const handleBooking = async () => {
+    if (!user) {
+      toast.error('Please login to book a service');
+      return;
+    }
+
     setLoading(true);
     try {
       await apiService.createBooking({
+        userId: user.id,
         providerId: provider.userId,
         category: bookingData.category,
-        dateTime: bookingData.dateTime,
+        dateTime: bookingData.dateTime.toISOString(),
         location: bookingData.location,
         notes: bookingData.notes,
         price: provider.rate * bookingData.duration,
@@ -137,16 +145,15 @@ export function BookingModal({ provider, onClose }: BookingModalProps) {
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 mb-2">Date & Time</label>
                   <DatePicker
-                    selected={bookingData.dateTime ? new Date(bookingData.dateTime) : null}
+                    selected={bookingData.dateTime}
                     onChange={(date) =>
-                      setBookingData({ ...bookingData, dateTime: date?.toISOString() || '' })
+                      setBookingData({ ...bookingData, dateTime: date || new Date() })
                     }
                     showTimeSelect
                     timeFormat="HH:mm"
                     timeIntervals={30}
                     dateFormat="MMMM d, yyyy h:mm aa"
                     minDate={new Date()}
-                    placeholderText="Choose date and time"
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -224,7 +231,6 @@ export function BookingModal({ provider, onClose }: BookingModalProps) {
                 onClick={() => setStep(2)}
                 disabled={
                   !bookingData.category ||
-                  !bookingData.dateTime ||
                   !bookingData.location ||
                   bookingData.duration <= 0
                 }
@@ -290,7 +296,7 @@ export function BookingModal({ provider, onClose }: BookingModalProps) {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Date & Time</span>
-                  <span className="font-medium">{new Date(bookingData.dateTime).toLocaleString()}</span>
+                  <span className="font-medium">{bookingData.dateTime.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Duration</span>

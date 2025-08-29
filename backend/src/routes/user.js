@@ -277,14 +277,9 @@ router.post("/signin", async (req, res) => {
 
 
 // Delete User route
-router.delete("/user", authMiddleware, isAdmin, async (req, res) => {
+router.delete("/user/:userId", authMiddleware, isAdmin, async (req, res) => {
   try {
-    const parsed = deleteUserSchema.safeParse(req.body);
-    if (!parsed.success) {
-      return res.status(400).json({ errors: parsed.error.errors });
-    }
-
-    const { userId } = parsed.data;
+    const { userId } = req.params;
 
     await prisma.user.delete({
       where: { id: userId },
@@ -295,7 +290,7 @@ router.delete("/user", authMiddleware, isAdmin, async (req, res) => {
     console.error("Error deleting user:", error);
     res.status(500).json({ message: "Internal server error" });
   }
-})
+});
 
 // GET /me - get currently logged in user's profile
 router.get("/me", authMiddleware, async (req, res) => {

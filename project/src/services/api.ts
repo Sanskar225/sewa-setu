@@ -294,6 +294,27 @@ class APIService {
       body: JSON.stringify({ userId }),
     });
   }
+
+  // Availability APIs
+  async createAvailabilitySlot(data: {
+    startTime: string;
+    endTime: string;
+  }) {
+    return this.request('/availability', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getAvailabilitySlots() {
+    return this.request('/availability');
+  }
+
+  async deleteAvailabilitySlot(slotId: string) {
+    return this.request(`/availability/${slotId}`, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const apiService = new APIService();
